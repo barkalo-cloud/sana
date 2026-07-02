@@ -270,6 +270,57 @@
     .pillar-desc { font-size: 12px; color: #4b6280; line-height: 1.7; }
     .pillar-accent { display: inline-block; width: 24px; height: 2px; border-radius: 1px; margin-bottom: 16px; }
 
+    /* ── WORKOUT LIBRARY ── */
+    #workout-library { padding: 120px 0; border-top: 1px solid #1a2640; }
+    .workout-lib-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-top: 56px; margin-bottom: 32px;
+    }
+    .workout-lib-card {
+      background: #0f1629; border: 1px solid #1a2640; border-radius: 14px;
+      padding: 24px 20px; position: relative; overflow: hidden;
+    }
+    .workout-lib-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #2563eb, #6366f1);
+    }
+    .workout-lib-num {
+      font-size: 44px; font-weight: 700; color: #f0f6ff;
+      letter-spacing: -2px; line-height: 1; margin-bottom: 8px;
+    }
+    .workout-lib-label {
+      font-size: 11px; font-weight: 700; color: #6366f1;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;
+    }
+    .workout-lib-desc { font-size: 12px; color: #4b6280; line-height: 1.7; }
+
+    .workout-lib-detail {
+      background: #0c1424; border: 1px solid #1a2640; border-radius: 14px;
+      padding: 28px 32px; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0;
+      margin-top: 8px;
+    }
+    .workout-lib-detail-head {
+      font-size: 11px; font-weight: 700; color: #6366f1;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px;
+    }
+    .workout-lib-detail-items { display: flex; flex-direction: column; gap: 8px; }
+    .workout-lib-detail-items span {
+      font-size: 13px; color: #8ba3c0; padding-left: 12px; position: relative;
+    }
+    .workout-lib-detail-items span::before {
+      content: ''; position: absolute; left: 0; top: 50%;
+      transform: translateY(-50%); width: 4px; height: 4px;
+      border-radius: 50%; background: #2563eb;
+    }
+    .workout-lib-divider {
+      width: 1px; background: #1a2640; margin: 0 32px;
+    }
+    @media (max-width: 900px) {
+      .workout-lib-grid { grid-template-columns: 1fr 1fr; }
+      .workout-lib-detail { grid-template-columns: 1fr; gap: 24px; }
+      .workout-lib-divider { display: none; }
+    }
+
     /* ── MISSION ── */
     #mission { padding: 120px 0; border-top: 1px solid #1a2640; background: #060b18; }
     .mission-inner { max-width: 740px; }
@@ -735,7 +786,7 @@
         <div class="stat-desc">Recovery states</div>
       </div>
       <div class="stat-item reveal reveal-delay-3">
-        <div class="stat-num">50+</div>
+        <div class="stat-num">250+</div>
         <div class="stat-desc">Exercise variations</div>
       </div>
       <div class="stat-item reveal reveal-delay-4">
@@ -1118,6 +1169,73 @@
           <div class="pillar-desc">Only activates when you log a night out. Hydration, B-vitamins, liver support, reduced training load — a full recovery plan without the judgment.</div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ── WORKOUT LIBRARY ── -->
+  <section class="content-section" id="workout-library">
+    <div class="container">
+      <div class="section-label reveal">Training Engine</div>
+      <h2 class="section-title reveal reveal-delay-1">250+ exercises. Zero repetition.</h2>
+      <p class="section-sub reveal reveal-delay-2">Every day Sana builds a fresh workout from scratch — matched to your recovery state, equipment, goal, and fitness level. No two weeks look the same.</p>
+
+      <div class="workout-lib-grid reveal reveal-delay-2">
+
+        <div class="workout-lib-card">
+          <div class="workout-lib-num">35</div>
+          <div class="workout-lib-label">Primary exercises</div>
+          <div class="workout-lib-desc">Core movements across push, pull, legs, and core — selected each day based on your recovery state and available equipment.</div>
+        </div>
+
+        <div class="workout-lib-card">
+          <div class="workout-lib-num">175</div>
+          <div class="workout-lib-label">Swap alternatives</div>
+          <div class="workout-lib-desc">Every exercise has 5 alternatives you can switch on the fly — same muscle, different tool. No equipment? No problem.</div>
+        </div>
+
+        <div class="workout-lib-card">
+          <div class="workout-lib-num">3</div>
+          <div class="workout-lib-label">Session rotations</div>
+          <div class="workout-lib-desc">Lifting rotates Push → Pull → Legs. Cardio rotates Steady State → Intervals → Cross-train. Yoga rotates Flow → Strength → Yin.</div>
+        </div>
+
+        <div class="workout-lib-card">
+          <div class="workout-lib-num">4</div>
+          <div class="workout-lib-label">Recovery tiers</div>
+          <div class="workout-lib-desc">Green = full intensity. Standard = balanced load. Light = reduced volume. Rest = active recovery only. Volume and exercise selection shift automatically.</div>
+        </div>
+
+      </div>
+
+      <div class="workout-lib-detail reveal reveal-delay-3">
+        <div class="workout-lib-detail-col">
+          <div class="workout-lib-detail-head">Lifting</div>
+          <div class="workout-lib-detail-items">
+            <span>Push — bench, press, fly, triceps</span>
+            <span>Pull — row, curl, lat, rear delt</span>
+            <span>Legs — squat, hinge, lunge, calf</span>
+          </div>
+        </div>
+        <div class="workout-lib-divider"></div>
+        <div class="workout-lib-detail-col">
+          <div class="workout-lib-detail-head">Cardio</div>
+          <div class="workout-lib-detail-items">
+            <span>Steady state — run, row, bike</span>
+            <span>Intervals — sprints, HIIT, hills</span>
+            <span>Cross-train — assault bike, ski erg</span>
+          </div>
+        </div>
+        <div class="workout-lib-divider"></div>
+        <div class="workout-lib-detail-col">
+          <div class="workout-lib-detail-head">Yoga &amp; Pilates</div>
+          <div class="workout-lib-detail-items">
+            <span>Flow — vinyasa, sun salutations</span>
+            <span>Strength — warrior, balances</span>
+            <span>Yin — deep holds, breathwork</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
