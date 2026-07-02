@@ -1886,7 +1886,7 @@
                      hiS:"Don't skip today — creatine actively protects muscle tissue under elevated cortisol.",
                      great:"Green day — creatine primes your ATP system for peak output." },
       whey:        { label:"Whey protein", dose:"25–50g", slot:"Post-workout",
-                     base:"Take within 90 min of training to maximise muscle protein synthesis.",
+                     base:"Take within 90 min of training to maximize muscle protein synthesis.",
                      hiS:"High cortisol accelerates muscle breakdown — protein intake is your direct counter today.",
                      great:"Post-workout MPS window is widest on green days — don't skip this." },
       vitd3:       { label:"Vitamin D3", dose:"2,000–4,000 IU", slot:"With breakfast",
@@ -1942,7 +1942,7 @@
       berberine:   { label:"Berberine", dose:"500mg", slot:"With main meal",
                      base:"Take with a carb-containing meal for best effect. Can be split 2–3× daily." },
       coq10:       { label:"CoQ10", dose:"100–300mg", slot:"With breakfast (or largest meal)",
-                     base:"Fat-soluble — absorption is maximised alongside a high-fat meal." },
+                     base:"Fat-soluble — absorption is maximized alongside a high-fat meal." },
     };
 
     /* ─── PLAN BUILDER ───────────────────────────────────────────── */
@@ -2261,7 +2261,7 @@
       const trainSession = lowR&&hiS?"Active Recovery":lowR?`Light · ${dayLabel}`:great?`Green · ${dayLabel}`:dayLabel;
       const trainNote = lowR&&hiS
         ?`Session swapped to active recovery. ${wName?`Your ${wName} HRV confirms your nervous system is under load.`:"Energy and stress signals indicate your nervous system is under load."} Rest now, stronger tomorrow.`
-        :lowR?`Intensity reduced — light ${dayLabel.toLowerCase()} day. Loads dialled back but you're still training.`
+        :lowR?`Intensity reduced — light ${dayLabel.toLowerCase()} day. Loads dialed back but you're still training.`
         :great?`Green day — ${dayLabel} at full intensity. ${wName?`${wName} confirms strong recovery.`:"All signals aligned."} This is when progress happens fastest.`
         :`${dayLabel} session — adjust weight based on how the warm-up feels.`;
 
@@ -2454,7 +2454,7 @@
       };
       const sleepGoalNote = goalSleepContext[goal] || goalSleepContext.maintain;
       const sleepSexNote  = f
-        ? "For women, sleep quality directly regulates oestrogen, progesterone, and cortisol — the three hormones that determine how your body responds to training."
+        ? "For women, sleep quality directly regulates estrogen, progesterone, and cortisol — the three hormones that determine how your body responds to training."
         : "Under 7 hrs, testosterone drops 10–15% within a week — directly opposing any strength or muscle goal.";
 
       const sleepNote = sleep_hrs < 6
@@ -2483,14 +2483,40 @@
         : dietKey==="pescatarian"? "Lunch: salmon with rice — omega-3 anti-inflammatory + full amino acid profile"
         : "Lunch: chicken or salmon with rice — restores glycogen and amino acids efficiently";
 
-      const hasMgSupp   = userSupps.includes("magnesium");
-      const hasB12Supp  = userSupps.includes("b12") || userSupps.includes("multi");
-      const hasVitCSupp = userSupps.includes("multi");
-      const hasOmega3   = userSupps.includes("omega3");
-      const hasCreatine = userSupps.includes("creatine");
+      const hasMgSupp      = userSupps.includes("magnesium");
+      const hasB12Supp     = userSupps.includes("b12") || userSupps.includes("multi");
+      const hasVitCSupp    = userSupps.includes("multi");
+      const hasOmega3      = userSupps.includes("omega3");
+      const hasCreatine    = userSupps.includes("creatine");
+      const hasElectrolytes = userSupps.includes("electrolytes");
+
+      // Per-supplement advice keyed by recovery level
+      const SOCIAL_SUPP_NOTES = {
+        creatine:    {light:"Take as usual — one or two drinks don't affect creatine's benefits.",                                moderate:"Okay to take; skip if your stomach is still unsettled.",                              heavy:"Skip today — your kidneys are already working hard processing alcohol."},
+        whey:        {light:"Take as usual.",                                                                                      moderate:"Take after a meal — protein is the priority today.",                                  heavy:"Fine once your stomach settles — helps restore amino acids depleted overnight."},
+        vitd3:       {light:"Take as usual with food.",                                                                            moderate:"Take as usual with food.",                                                            heavy:"Take with breakfast — fat-soluble, it needs food to absorb properly."},
+        omega3:      {light:"Take as usual.",                                                                                      moderate:"Take with food — reduces alcohol-related inflammation.",                               heavy:"Take with breakfast — anti-inflammatory effect is directly helpful today."},
+        magnesium:   {light:"Take at bedtime as usual — even light alcohol nudges absorption down.",                               moderate:"Move tonight's dose to 8 PM, earlier than usual — alcohol suppresses magnesium absorption throughout the day.",heavy:"Take at 8 PM tonight, earlier than usual. Alcohol heavily depletes magnesium."},
+        caffeine:    {light:"Take as normal.",                                                                                     moderate:"Delay by 30 min — caffeine on compromised sleep raises cortisol further.",             heavy:"Delay by 60–90 min and cap at 200mg. Let adenosine clear before forcing wakefulness."},
+        ashwagandha: {light:"Take as usual.",                                                                                      moderate:"Take today — blunts the cortisol spike from alcohol and disrupted sleep.",             heavy:"Take with breakfast — directly counteracts today's elevated cortisol."},
+        zinc:        {light:"Take as usual.",                                                                                      moderate:"Take with food — alcohol depletes zinc.",                                              heavy:"Take with food — zinc supports immune function and is depleted by alcohol."},
+        betaalanine: {light:"Take as usual if training.",                                                                          moderate:"Skip unless you're training at normal intensity today.",                               heavy:"Skip today — your system is already taxed."},
+        citrulline:  {light:"Take as usual if training.",                                                                          moderate:"Skip unless you're training.",                                                         heavy:"Skip today — not needed on a rest day."},
+        collagen:    {light:"Take as usual.",                                                                                      moderate:"Take as usual — limited synthesis today but not harmful.",                             heavy:"Skip today — alcohol impairs collagen synthesis. Take it tomorrow when it will count."},
+        theanine:    {light:"Stack with caffeine as usual.",                                                                       moderate:"Stack with caffeine today — especially useful for jitter-free focus on disrupted sleep.",heavy:"Take with your first coffee — reduces the jitteriness caffeine causes on poor sleep."},
+        melatonin:   {light:"Use as needed tonight.",                                                                              moderate:"Use it tonight — even moderate alcohol disrupts REM sleep by up to 25%.",             heavy:"Definitely use it tonight — alcohol suppresses melatonin production significantly."},
+        probiotics:  {light:"Take as usual.",                                                                                      moderate:"Take today — alcohol irritates the gut lining; probiotics help restore balance.",      heavy:"Take with breakfast — alcohol disrupts gut flora. Today is the highest-value day for this."},
+        b12:         {light:"Take as usual.",                                                                                      moderate:"Take with breakfast — B12 is directly depleted by alcohol.",                          heavy:"Take immediately — B vitamins are the first thing alcohol depletes."},
+        electrolytes:{light:"Use if you train or sweat.",                                                                          moderate:"Take once today — mineral replenishment is the priority.",                             heavy:"Most important day to use these. Take as soon as you wake up and again at noon."},
+        turmeric:    {light:"Take as usual.",                                                                                      moderate:"Take today — anti-inflammatory action is useful after alcohol.",                       heavy:"Take with your first meal — curcumin helps resolve the inflammatory response from alcohol."},
+        multi:       {light:"Take as usual.",                                                                                      moderate:"Take today — the B vitamins and Vitamin C are both directly helpful.",                 heavy:"Take with breakfast — B vitamins and Vitamin C are especially relevant today."},
+        lionsmane:   {light:"Take as usual.",                                                                                      moderate:"Take as usual — no interaction with alcohol recovery.",                               heavy:"Take as usual."},
+        rhodiola:    {light:"Take as usual.",                                                                                      moderate:"Take today — helps with mental fatigue from disrupted sleep.",                        heavy:"Take this morning — directly useful for the cortisol and fatigue after a big night."},
+        berberine:   {light:"Take with food as usual.",                                                                            moderate:"Take with food as usual.",                                                            heavy:"Take with food as usual."},
+      };
 
       const socialHydration = {
-        none:    ["Drink 500 ml water first thing — keeps everything running smoothly"],
+        none:    ["Drink 500 ml of water first thing — keeps everything running smoothly"],
         light:   ["Add one extra glass of water or coconut water this morning","Even 1–2 drinks nudge dehydration — a small top-up helps"],
         moderate:["500 ml water + electrolytes within 30 min of waking — this is step one","Coconut water or an electrolyte tablet works better than plain water right now","Keep sipping through the morning — aim for 2L by noon"],
         heavy:   ["1 litre of water + electrolytes as soon as you wake — before coffee, before anything","Sip steadily — don't chug, your stomach lining needs gentleness right now","Target 3L total today. Your kidneys worked overtime last night."],
@@ -2499,12 +2525,12 @@
       const socialFood = {
         none:    [],
         light:   [
-          noEgg ? "High-protein breakfast — tofu, tempeh or chickpeas give you the amino acid support" : "Eggs this morning — cysteine in eggs helps clear residual acetaldehyde",
+          noEgg ? "High-protein breakfast — tofu, tempeh, or chickpeas provide the amino acid support you need" : "Eggs this morning — cysteine in eggs helps clear residual acetaldehyde",
           "Banana for potassium — even light alcohol depletes electrolytes",
         ],
         moderate:[
           eggItem,
-          "Banana + avocado for potassium and healthy fats to stabilise blood sugar",
+          "Banana + avocado for potassium and healthy fats to stabilize blood sugar",
           "Ginger tea if your stomach is unsettled — genuinely reduces nausea",
           lunchItem,
         ],
@@ -2517,26 +2543,27 @@
         ],
       }[socialLevel];
 
-      const socialSupps = {
-        none:    [],
-        light:   [
-          hasVitCSupp ? "Multivitamin · your usual dose — the Vitamin C in it is helpful today" : "Vitamin C · 500mg — light antioxidant support",
-          ...(hasMgSupp ? ["Your magnesium glycinate tonight — even light alcohol suppresses magnesium absorption"] : []),
-        ],
-        moderate:[
-          hasB12Supp ? "B-complex or B12 · your usual dose — alcohol depletes B1, B6, B12 directly" : "B-complex · 1 tablet — alcohol depletes B1, B6, B12 directly",
-          hasVitCSupp ? "Vitamin C from your multivitamin — take it with breakfast today" : "Vitamin C · 1g — supports liver detox pathways",
-          hasMgSupp ? "Magnesium glycinate · take it at 8 PM tonight, earlier than usual — alcohol suppresses absorption" : "Magnesium glycinate · 200mg — alcohol depletes magnesium; this is a high-value addition today",
-          ...(hasOmega3 ? ["Omega-3 · your usual dose — anti-inflammatory, especially relevant after alcohol"] : []),
-        ],
-        heavy:   [
-          hasB12Supp ? "B-complex or B12 · take it first thing — this is its most important day" : "B-complex · 1 tablet — take immediately, B vitamins are the first thing alcohol depletes",
-          "NAC (N-Acetylcysteine) · 600mg — boosts glutathione, the liver's primary detox molecule. Most impactful supplement today.",
-          hasVitCSupp ? "Vitamin C from your multivitamin — take now alongside NAC" : "Vitamin C · 1g — antioxidant support while your body is still clearing alcohol",
-          "Electrolyte tablet or powder — sodium, potassium, magnesium all need replenishing",
-          ...(hasCreatine ? ["Skip creatine today — your kidneys are already working hard"] : []),
-        ],
-      }[socialLevel];
+      // Build personalized supplement list from user's actual stack
+      const userSuppNotes = userSupps
+        .filter(k => SOCIAL_SUPP_NOTES[k] && socialLevel !== "none")
+        .map(k => `${SUPP_META[k]?.label || k} · ${SOCIAL_SUPP_NOTES[k][socialLevel]}`);
+
+      const socialSupps = socialLevel === "none" ? []
+        : socialLevel === "light" ? [
+            ...userSuppNotes,
+            ...(!hasMgSupp ? ["Magnesium glycinate · 200mg before bed tonight — even light alcohol suppresses magnesium absorption"] : []),
+          ]
+        : socialLevel === "moderate" ? [
+            ...userSuppNotes,
+            ...(!hasB12Supp ? ["B-complex · 1 tablet — alcohol depletes B1, B6, and B12 directly"] : []),
+            ...(!hasMgSupp  ? ["Magnesium glycinate · 200mg at 8 PM — alcohol suppresses absorption"] : []),
+          ]
+        : [ // heavy
+            ...(!hasB12Supp ? ["B-complex · 1 tablet — take immediately, B vitamins are the first thing alcohol depletes"] : []),
+            "NAC (N-Acetylcysteine) · 600mg — boosts glutathione, your liver's primary detox molecule. Most impactful supplement today.",
+            ...(!hasElectrolytes ? ["Electrolyte tablet or powder — sodium, potassium, and magnesium all need replenishing"] : []),
+            ...userSuppNotes,
+          ];
 
       const socialTrain = socialLevel==="none"
         ? `Proceed as planned — you're in great shape for today${wantMass?" strength session":goal==="cardio"?" cardio session":" session"}.`
@@ -2549,9 +2576,9 @@
       const socialSleep = socialLevel==="none"
         ? `Normal sleep routine tonight. ${wantMass?"Consistent sleep is where the muscle is built.":"You're set up well."}`
         : socialLevel==="light"
-          ? `Stick to your usual bedtime. ${f?"Alcohol can disturb oestrogen metabolism overnight — the wind-down protocol matters more than usual tonight.":"Even light alcohol fragments REM by up to 25%. Keep the wind-down protocol."}`
+          ? `Stick to your usual bedtime. ${f?"Alcohol can disturb estrogen metabolism overnight — the wind-down protocol matters more than usual tonight.":"Even light alcohol disrupts REM sleep by up to 25%. Keep the wind-down protocol."}`
           : socialLevel==="moderate"
-            ? `Earlier bedtime tonight — aim for 9:30 PM. ${f?"Oestrogen and progesterone recovery is sleep-dependent. Your hormones tonight need the extra hours.":"Alcohol suppresses REM significantly and lowers testosterone for up to 24 hrs — earlier bed is your highest-leverage move."}`
+            ? `Earlier bedtime tonight — aim for 9:30 PM. ${f?"Estrogen and progesterone recovery is sleep-dependent. Your hormones tonight need the extra hours.":"Alcohol suppresses REM significantly and lowers testosterone for up to 24 hrs — earlier bed is your highest-leverage move."}`
             : `9:00 PM bedtime, aim for 9+ hours — non-negotiable tonight. ${f?"Your hormonal recovery is entirely sleep-gated.":wantMass?"Testosterone suppression from alcohol lasts up to 24 hrs. Tonight's sleep is where you take that back.":"Sleep is where the real recovery happens. Everything else today is preparation for tonight."}`;
 
       const socialNote = socialLevel==="none"
@@ -3970,7 +3997,7 @@
               why:"Maximises muscle protein synthesis in the post-workout window. The most convenient way to hit daily protein targets.",
               evidence:"Strong"},
             {v:"vitd3",       icon:"sun", label:"Vitamin D3",            dose:"2000–4000 IU daily",    tag:"Hormone",
-              what:"Fat-soluble vitamin synthesised from sunlight — most people in northern latitudes are significantly deficient.",
+              what:"Fat-soluble vitamin synthesized from sunlight — most people in northern latitudes are significantly deficient.",
               why:"Regulates testosterone, immune function, bone density, and mood. Deficiency directly suppresses muscle strength and recovery.",
               evidence:"Strong"},
             {v:"omega3",      icon:"fish", label:"Omega-3 (Fish Oil)",    dose:"2–3g EPA+DHA daily",    tag:"Recovery",
@@ -5156,202 +5183,307 @@ BEHAVIOUR:
 
     function WorkoutTimer({ exercises, onClose }) {
       const T = React.useContext(ThemeCtx);
-      const [exIdx,    setExIdx]    = useState(0);
-      const [setNum,   setSetNum]   = useState(1);
-      const [phase,    setPhase]    = useState("ready");
-      const [secs,     setSecs]     = useState(0);
-      const [setLogs,  setSetLogs]  = useState({}); // key: "exIdx_setNum" → {weight, rpe}
-      const [exNotes,  setExNotes]  = useState({}); // key: exIdx → note string
-      const [showLog,  setShowLog]  = useState(false);
+      const [exIdx,     setExIdx]     = useState(0);
+      const [activeSet, setActiveSet] = useState(1);
+      const [phase,     setPhase]     = useState("ready"); // ready | working | resting | done
+      const [secs,      setSecs]      = useState(0);
+      const [setLogs,   setSetLogs]   = useState({}); // "exIdx_setNum" → {weight, reps, done}
+      const [exNotes,   setExNotes]   = useState({}); // exIdx → string
       const timerRef = useRef(null);
-      const stateRef = useRef({ exIdx:0, setNum:1 });
+      const stateRef = useRef({ exIdx:0, activeSet:1 });
 
-      useEffect(() => { stateRef.current.exIdx  = exIdx;  }, [exIdx]);
-      useEffect(() => { stateRef.current.setNum = setNum; }, [setNum]);
+      useEffect(() => { stateRef.current.exIdx     = exIdx;     }, [exIdx]);
+      useEffect(() => { stateRef.current.activeSet = activeSet; }, [activeSet]);
       useEffect(() => () => clearInterval(timerRef.current), []);
 
       const ex        = exercises?.[exIdx];
       const totalSets = Math.max(1, parseInt(ex?.sets) || 3);
-      const logKey    = `${exIdx}_${setNum}`;
-      const currLog   = setLogs[logKey] || {};
+      const stop      = () => clearInterval(timerRef.current);
+      const fmt       = s => `${String(Math.floor(Math.abs(s)/60)).padStart(2,"0")}:${String(Math.abs(s)%60).padStart(2,"0")}`;
+      const completedSetsForEx = (ei) =>
+        Object.keys(setLogs).filter(k => k.startsWith(`${ei}_`) && setLogs[k].done).length;
 
-      const stop = () => clearInterval(timerRef.current);
+      const goToEx = (i) => {
+        stop(); setExIdx(i); setActiveSet(1); setPhase("ready"); setSecs(0);
+        stateRef.current = { exIdx:i, activeSet:1 };
+      };
 
-      const doAdvance = (ei, sn) => {
-        const lastSet = sn >= Math.max(1, parseInt(exercises?.[ei]?.sets) || 3);
-        const lastEx  = ei >= (exercises?.length || 1) - 1;
-        if (lastSet && lastEx) { setPhase("done"); return; }
-        if (lastSet) { setExIdx(ei+1); setSetNum(1); stateRef.current = {exIdx:ei+1,setNum:1}; setShowLog(false); }
-        else         { setSetNum(sn+1); stateRef.current.setNum = sn+1; }
+      const startSet = (setNum) => {
+        stop(); setSecs(0); setActiveSet(setNum); setPhase("working");
+        stateRef.current.activeSet = setNum;
+        let s=0; timerRef.current = setInterval(()=>{ s++; setSecs(s); }, 1000);
+      };
+
+      const completeSet = (setNum) => {
+        stop();
+        const ei     = stateRef.current.exIdx;
+        const exSets = Math.max(1, parseInt(exercises?.[ei]?.sets) || 3);
+        setSetLogs(p => ({...p, [`${ei}_${setNum}`]: {...(p[`${ei}_${setNum}`]||{}), done:true}}));
+        const isLastSet = setNum >= exSets;
+        const isLastEx  = ei >= (exercises?.length||1) - 1;
+        if (isLastSet && isLastEx) { setPhase("done"); return; }
+        const rest = parseRestSecs(exercises?.[ei]?.rest);
+        setSecs(rest); setPhase("resting");
+        let r = rest;
+        timerRef.current = setInterval(() => {
+          r--; setSecs(r);
+          if (r <= 0) {
+            stop();
+            if (isLastSet) {
+              const nextEi = stateRef.current.exIdx + 1;
+              setExIdx(nextEi); setActiveSet(1);
+              stateRef.current = { exIdx:nextEi, activeSet:1 };
+            } else {
+              const nextS = stateRef.current.activeSet + 1;
+              setActiveSet(nextS); stateRef.current.activeSet = nextS;
+            }
+            setPhase("ready");
+          }
+        }, 1000);
+      };
+
+      const skipRest = () => {
+        stop();
+        const ei        = stateRef.current.exIdx;
+        const completed = stateRef.current.activeSet;
+        const exSets    = Math.max(1, parseInt(exercises?.[ei]?.sets)||3);
+        if (completed >= exSets) {
+          const nextEi = ei + 1;
+          if (nextEi < exercises.length) { setExIdx(nextEi); setActiveSet(1); stateRef.current = {exIdx:nextEi,activeSet:1}; }
+        } else {
+          const nextS = completed + 1; setActiveSet(nextS); stateRef.current.activeSet = nextS;
+        }
         setPhase("ready");
       };
 
-      const startSet = () => { stop(); setSecs(0); setPhase("working"); let s=0; timerRef.current=setInterval(()=>{s++;setSecs(s);},1000); };
+      const updateLog  = (setNum, field, val) =>
+        setSetLogs(p => ({...p, [`${exIdx}_${setNum}`]: {...(p[`${exIdx}_${setNum}`]||{}), [field]:val}}));
+      const updateNote = val => setExNotes(p => ({...p, [exIdx]:val}));
 
-      const completeSet = () => {
-        stop();
-        const rest = parseRestSecs(exercises?.[stateRef.current.exIdx]?.rest);
-        setSecs(rest); setPhase("resting");
-        let r = rest;
-        timerRef.current = setInterval(()=>{ r--; setSecs(r); if(r<=0){stop();doAdvance(stateRef.current.exIdx,stateRef.current.setNum);} },1000);
-      };
+      const iStyle = (active) => ({
+        padding:"7px 8px", background:T.card, border:`0.5px solid ${active?T.trainAc:T.border2}`,
+        borderRadius:T.r8, color:T.text, fontSize:12, outline:"none", fontFamily:"inherit",
+        width:"100%", boxSizing:"border-box",
+      });
 
-      const skipRest = () => { stop(); doAdvance(stateRef.current.exIdx, stateRef.current.setNum); };
-      const fmt = s => `${String(Math.floor(Math.abs(s)/60)).padStart(2,"0")}:${String(Math.abs(s)%60).padStart(2,"0")}`;
-
-      const updateLog = (field, val) => setSetLogs(p=>({...p,[logKey]:{...p[logKey],[field]:val}}));
-      const updateNote = val => setExNotes(p=>({...p,[exIdx]:val}));
-
-      const hasAnyLog = Object.keys(setLogs).some(k=>setLogs[k].weight||setLogs[k].rpe) || Object.values(exNotes).some(Boolean);
-
-      const inputStyle = {
-        padding:"8px 10px",background:T.card2,border:`0.5px solid ${T.border2}`,
-        borderRadius:T.r8,color:T.text,fontSize:12,outline:"none",fontFamily:"inherit",
-      };
-
-      return (
-        <div style={{position:"absolute",inset:0,zIndex:90,display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
-          <div onClick={onClose} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(4px)"}}/>
-          <div style={{position:"relative",background:T.card,borderRadius:"22px 22px 0 0",padding:"8px 20px 36px",zIndex:1,maxHeight:"90%",overflowY:"auto"}}>
-            <div style={{width:36,height:4,background:T.border2,borderRadius:2,margin:"8px auto 18px"}}/>
-
-            {phase==="done" ? (
-              <div style={{paddingBottom:8}}>
-                <div style={{textAlign:"center",marginBottom:hasAnyLog?20:0,paddingBottom:hasAnyLog?20:0,borderBottom:hasAnyLog?`0.5px solid ${T.border}`:"none"}}>
-                  <div style={{marginBottom:12,display:"flex",justifyContent:"center"}}><SvgIcon name="trophy" size={44} color={T.green}/></div>
-                  <div style={{fontSize:20,fontWeight:700,color:T.green,marginBottom:6}}>Workout complete!</div>
-                  <div style={{fontSize:12,color:T.text2,marginBottom:20}}>All {exercises.length} exercises done. Great work.</div>
-                  <button onClick={onClose} style={{padding:"14px 40px",background:T.green,border:"none",borderRadius:T.r12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Done ✓</button>
-                </div>
-                {hasAnyLog&&(
-                  <div style={{marginTop:20}}>
-                    <div style={{fontSize:10,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:12}}>Session log</div>
-                    {exercises.map((ex,i)=>{
-                      const exSetKeys = Object.keys(setLogs).filter(k=>k.startsWith(`${i}_`)&&(setLogs[k].weight||setLogs[k].rpe));
-                      if(!exSetKeys.length && !exNotes[i]) return null;
-                      return (
-                        <div key={i} style={{marginBottom:12,padding:"10px 12px",background:T.card2,border:`0.5px solid ${T.border}`,borderRadius:T.r8}}>
-                          <div style={{fontSize:12,fontWeight:600,color:T.text,marginBottom:6}}>{ex.name}</div>
-                          {exSetKeys.map(k=>{
-                            const sn = k.split("_")[1];
-                            const lg = setLogs[k];
-                            return (
-                              <div key={k} style={{display:"flex",gap:12,marginBottom:3}}>
-                                <div style={{fontSize:10,color:T.text3,flexShrink:0}}>Set {sn}</div>
-                                {lg.weight&&<div style={{fontSize:11,color:T.trainAc,fontWeight:500}}>{lg.weight}</div>}
-                                {lg.rpe&&<div style={{fontSize:11,color:T.text2}}>RPE {lg.rpe}</div>}
-                              </div>
-                            );
-                          })}
-                          {exNotes[i]&&<div style={{fontSize:11,color:T.text2,marginTop:4,lineHeight:1.5,fontStyle:"italic"}}>{exNotes[i]}</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+      // ── Done screen ──────────────────────────────────────────────
+      if (phase === "done") {
+        const hasLog = Object.values(setLogs).some(l=>l.weight||l.reps) || Object.values(exNotes).some(Boolean);
+        return (
+          <div style={{position:"absolute",inset:0,zIndex:90,background:T.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{padding:"14px 20px 12px",display:"flex",alignItems:"center",gap:10,borderBottom:`0.5px solid ${T.border}`,flexShrink:0}}>
+              <div style={{fontSize:15,fontWeight:700,color:T.green,flex:1}}>Workout complete!</div>
+              <SvgIcon name="trophy" size={20} color={T.green}/>
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"16px 20px 28px"}}>
+              <div style={{textAlign:"center",paddingBottom:16,marginBottom:16,borderBottom:`0.5px solid ${T.border}`}}>
+                <div style={{fontSize:13,color:T.text2,marginBottom:16}}>All {exercises.length} exercises done. Great work.</div>
+                <button onClick={onClose} style={{padding:"13px 36px",background:T.green,border:"none",borderRadius:T.r12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Done ✓</button>
               </div>
-            ) : (
-              <>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-                  <div>
-                    <div style={{fontSize:9,color:T.text3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Exercise {exIdx+1} of {exercises.length}</div>
-                    <div style={{fontSize:17,fontWeight:700,color:T.text,lineHeight:1.2}}>{ex?.name}</div>
-                    <div style={{fontSize:11,color:T.text2,marginTop:3}}>{ex?.reps} · rest {ex?.rest||"60s"}</div>
-                  </div>
-                  <button onClick={onClose} style={{background:T.card2,border:`0.5px solid ${T.border}`,borderRadius:"50%",width:30,height:30,cursor:"pointer",color:T.text3,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✕</button>
-                </div>
-
-                {/* Set progress bars */}
-                <div style={{display:"flex",gap:5,marginBottom:20}}>
-                  {Array.from({length:totalSets}).map((_,i)=>(
-                    <div key={i} style={{flex:1,height:4,borderRadius:2,transition:"background .3s",
-                      background:i<setNum-1?T.trainAc:i===setNum-1?(phase==="working"?T.trainAc:`${T.trainAc}35`):T.border}}/>
-                  ))}
-                </div>
-
-                {/* Timer */}
-                <div style={{textAlign:"center",marginBottom:18}}>
-                  <div style={{fontSize:10,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6,
-                    color:phase==="working"?T.trainAc:phase==="resting"?T.amber:T.text3}}>
-                    {phase==="ready"?`Set ${setNum} of ${totalSets} — ready`:phase==="working"?`Set ${setNum} of ${totalSets} — working`:"Rest — next set soon"}
-                  </div>
-                  <div style={{fontSize:60,fontWeight:200,letterSpacing:"-3px",lineHeight:1,
-                    color:phase==="working"?T.trainAc:phase==="resting"?T.amber:T.text}}>
-                    {fmt(secs)}
-                  </div>
-                  {phase==="resting"&&<div style={{fontSize:11,color:T.text3,marginTop:6}}>Auto-advances in {secs}s</div>}
-                </div>
-
-                {/* Action */}
-                {phase==="ready"&&(
-                  <button onClick={startSet} style={{width:"100%",padding:"16px",background:`linear-gradient(135deg,${T.trainAc},${T.blueMid})`,border:"none",borderRadius:T.r12,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",letterSpacing:"-0.2px"}}>
-                    Start Set {setNum}
-                  </button>
-                )}
-                {phase==="working"&&(
-                  <button onClick={completeSet} style={{width:"100%",padding:"16px",background:T.green,border:"none",borderRadius:T.r12,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>
-                    ✓ Set {setNum} done
-                  </button>
-                )}
-                {phase==="resting"&&(
-                  <div style={{display:"flex",gap:9}}>
-                    <div style={{flex:1,padding:"14px",background:`${T.amber}12`,border:`1px solid ${T.amber}30`,borderRadius:T.r12,textAlign:"center"}}>
-                      <div style={{fontSize:13,fontWeight:600,color:T.amber}}>Resting…</div>
-                      <div style={{fontSize:10,color:T.text3,marginTop:2}}>Next set in {secs}s</div>
-                    </div>
-                    <button onClick={skipRest} style={{padding:"14px 16px",background:T.card2,border:`0.5px solid ${T.border2}`,borderRadius:T.r12,color:T.text2,fontSize:12,fontWeight:600,cursor:"pointer",flexShrink:0}}>Skip</button>
-                  </div>
-                )}
-
-                {/* Weight + notes log */}
-                {phase!=="resting"&&(
-                  <div style={{marginTop:14,borderTop:`0.5px solid ${T.border}`,paddingTop:12}}>
-                    <div onClick={()=>setShowLog(s=>!s)}
-                      style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",marginBottom:showLog?10:0}}>
-                      <div style={{fontSize:10,fontWeight:500,color:T.text3,letterSpacing:"0.04em"}}>
-                        {currLog.weight||currLog.rpe||exNotes[exIdx] ? "✓ Logged" : "Log weight & notes"}
-                        {currLog.weight&&<span style={{color:T.trainAc,marginLeft:6}}>{currLog.weight}</span>}
-                        {currLog.rpe&&<span style={{color:T.text2,marginLeft:4}}>RPE {currLog.rpe}</span>}
-                      </div>
-                      <span style={{fontSize:12,color:T.text3}}>{showLog?"▾":"▸"}</span>
-                    </div>
-                    {showLog&&(
-                      <>
-                        <div style={{display:"flex",gap:8,marginBottom:8}}>
-                          <input
-                            placeholder="Weight (e.g. 80kg or BW)"
-                            value={currLog.weight||""}
-                            onChange={e=>updateLog("weight",e.target.value)}
-                            style={{...inputStyle,flex:1}}
-                          />
-                          <input
-                            placeholder="RPE 1–10"
-                            value={currLog.rpe||""}
-                            onChange={e=>updateLog("rpe",e.target.value)}
-                            style={{...inputStyle,width:76}}
-                          />
+              {hasLog&&(
+                <>
+                  <div style={{fontSize:9,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10}}>Session log</div>
+                  {exercises.map((ex,i)=>{
+                    const exSets = Math.max(1,parseInt(ex.sets)||3);
+                    const hasData = Array.from({length:exSets}).some((_,si)=>{ const l=setLogs[`${i}_${si+1}`]||{}; return l.weight||l.reps||l.done; }) || exNotes[i];
+                    if (!hasData) return null;
+                    return (
+                      <div key={i} style={{marginBottom:10,padding:"10px 12px",background:T.card,border:`0.5px solid ${T.border}`,borderRadius:T.r8}}>
+                        <div style={{fontSize:12,fontWeight:600,color:T.text,marginBottom:8}}>{ex.name}</div>
+                        <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr",gap:"3px 8px",marginBottom:exNotes[i]?8:0}}>
+                          <div style={{fontSize:9,color:T.text3}}>Set</div>
+                          <div style={{fontSize:9,color:T.text3}}>Weight</div>
+                          <div style={{fontSize:9,color:T.text3}}>Reps</div>
+                          {Array.from({length:exSets}).map((_,si)=>{
+                            const lg = setLogs[`${i}_${si+1}`] || {};
+                            return (<React.Fragment key={si}>
+                              <div style={{fontSize:11,color:T.text2,lineHeight:"20px"}}>{si+1}</div>
+                              <div style={{fontSize:11,color:lg.weight?T.trainAc:T.text3,fontWeight:lg.weight?500:400,lineHeight:"20px"}}>{lg.weight||"—"}</div>
+                              <div style={{fontSize:11,color:lg.reps?T.text:T.text3,lineHeight:"20px"}}>{lg.reps||"—"}</div>
+                            </React.Fragment>);
+                          })}
                         </div>
-                        <textarea
-                          placeholder={`Notes for ${ex?.name||"this exercise"}…`}
-                          value={exNotes[exIdx]||""}
-                          onChange={e=>updateNote(e.target.value)}
-                          rows={2}
-                          style={{...inputStyle,width:"100%",resize:"none",boxSizing:"border-box",lineHeight:1.5}}
-                        />
-                      </>
+                        {exNotes[i]&&<div style={{fontSize:11,color:T.text2,fontStyle:"italic",lineHeight:1.55,borderTop:`0.5px solid ${T.border}`,paddingTop:6,marginTop:4}}>{exNotes[i]}</div>}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // ── Active workout screen ─────────────────────────────────────
+      return (
+        <div style={{position:"absolute",inset:0,zIndex:90,background:T.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+
+          {/* Header */}
+          <div style={{padding:"12px 16px 10px",borderBottom:`0.5px solid ${T.border}`,flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <button onClick={onClose}
+                style={{background:T.card2,border:`0.5px solid ${T.border}`,borderRadius:T.r8,padding:"5px 10px",cursor:"pointer",color:T.text2,fontSize:13,fontWeight:500,flexShrink:0}}>
+                ← Exit
+              </button>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:9,color:T.text3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:1}}>
+                  Exercise {exIdx+1} of {exercises.length}
+                </div>
+                <div style={{fontSize:14,fontWeight:700,color:T.text,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ex?.name}</div>
+              </div>
+              <div style={{textAlign:"right",flexShrink:0}}>
+                <div style={{fontSize:12,fontWeight:600,color:T.trainAc}}>{ex?.sets} sets</div>
+                <div style={{fontSize:10,color:T.text3}}>{ex?.reps} reps</div>
+              </div>
+            </div>
+            {/* Exercise dot navigation */}
+            <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:2}}>
+              {exercises.map((_,i)=>{
+                const done = completedSetsForEx(i) >= Math.max(1,parseInt(exercises[i]?.sets)||3);
+                return (
+                  <div key={i} onClick={()=>goToEx(i)} style={{
+                    flexShrink:0, height:6, borderRadius:3, cursor:"pointer", transition:"all .2s",
+                    width:i===exIdx?24:6,
+                    background:done?T.green:i===exIdx?T.trainAc:`${T.trainAc}28`
+                  }}/>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Timer banner — shown when working or resting */}
+          {phase==="working"&&(
+            <div style={{padding:"8px 16px",background:`${T.trainAc}14`,borderBottom:`0.5px solid ${T.trainAc}30`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+                <span style={{fontSize:11,fontWeight:600,color:T.trainAc}}>Set {activeSet} working</span>
+                <span style={{fontSize:22,fontWeight:300,color:T.trainAc,letterSpacing:"-1px"}}>{fmt(secs)}</span>
+              </div>
+              <button onClick={()=>completeSet(stateRef.current.activeSet)}
+                style={{padding:"7px 16px",background:T.green,border:"none",borderRadius:T.r8,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                ✓ Done
+              </button>
+            </div>
+          )}
+          {phase==="resting"&&(
+            <div style={{padding:"8px 16px",background:`${T.amber}12`,borderBottom:`0.5px solid ${T.amber}28`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+                <span style={{fontSize:11,fontWeight:600,color:T.amber}}>Resting</span>
+                <span style={{fontSize:22,fontWeight:300,color:T.amber,letterSpacing:"-1px"}}>{fmt(secs)}</span>
+              </div>
+              <button onClick={skipRest}
+                style={{padding:"7px 14px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text2,fontSize:12,fontWeight:500,cursor:"pointer"}}>
+                Skip rest
+              </button>
+            </div>
+          )}
+
+          {/* Scrollable main content */}
+          <div style={{flex:1,overflowY:"auto",padding:"14px 16px 28px"}}>
+
+            {/* Set prescription reminder */}
+            <div style={{fontSize:10,color:T.text3,marginBottom:10}}>
+              {ex?.sets} sets · {ex?.reps} reps · rest {ex?.rest||"60s"} between sets
+            </div>
+
+            {/* Column headers */}
+            <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr 56px",gap:"0 8px",marginBottom:4,padding:"0 2px"}}>
+              <div style={{fontSize:9,color:T.text3}}>Set</div>
+              <div style={{fontSize:9,color:T.text3}}>Weight</div>
+              <div style={{fontSize:9,color:T.text3}}>Reps done</div>
+              <div/>
+            </div>
+
+            {/* Set rows */}
+            {Array.from({length:totalSets}).map((_,si)=>{
+              const setNum  = si + 1;
+              const key     = `${exIdx}_${setNum}`;
+              const log     = setLogs[key] || {};
+              const isDone  = !!log.done;
+              const isActive = phase==="working" && activeSet===setNum;
+              const isNext  = !isDone && !isActive && setNum===activeSet && phase!=="working";
+
+              return (
+                <div key={si} style={{
+                  display:"grid", gridTemplateColumns:"28px 1fr 1fr 56px", gap:"0 8px",
+                  alignItems:"center", marginBottom:7, padding:"9px 6px",
+                  borderRadius:T.r8, transition:"all .2s",
+                  background:isActive?`${T.trainAc}10`:isDone?`${T.green}08`:isNext?`${T.trainAc}05`:"transparent",
+                  border:`0.5px solid ${isActive?T.trainAc:isDone?`${T.green}50`:T.border}`,
+                }}>
+                  <div style={{fontSize:13,fontWeight:600,textAlign:"center",color:isDone?T.green:isActive?T.trainAc:T.text3}}>
+                    {setNum}
+                  </div>
+                  <input
+                    placeholder="e.g. 80kg"
+                    value={log.weight||""}
+                    onChange={e=>updateLog(setNum,"weight",e.target.value)}
+                    style={iStyle(isActive)}
+                  />
+                  <input
+                    placeholder={ex?.reps||"reps"}
+                    value={log.reps||""}
+                    onChange={e=>updateLog(setNum,"reps",e.target.value)}
+                    style={iStyle(isActive)}
+                  />
+                  <div style={{display:"flex",justifyContent:"center"}}>
+                    {isDone ? (
+                      <div style={{width:32,height:32,borderRadius:"50%",background:`${T.green}18`,border:`1.5px solid ${T.green}60`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:T.green,cursor:"pointer"}}
+                        onClick={()=>setSetLogs(p=>({...p,[key]:{...p[key],done:false}}))}>
+                        ✓
+                      </div>
+                    ) : isActive ? (
+                      <button onClick={()=>completeSet(setNum)}
+                        style={{width:32,height:32,padding:0,background:T.green,border:"none",borderRadius:"50%",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        ✓
+                      </button>
+                    ) : (
+                      <button onClick={()=>startSet(setNum)}
+                        style={{width:32,height:32,padding:0,background:isNext?T.trainAc:`${T.trainAc}30`,border:"none",borderRadius:"50%",color:"#fff",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}>
+                        ▶
+                      </button>
                     )}
                   </div>
-                )}
+                </div>
+              );
+            })}
 
-                {/* Next up */}
-                {setNum>=totalSets && exercises[exIdx+1] && (
-                  <div style={{marginTop:12,padding:"9px 12px",background:T.card2,border:`0.5px solid ${T.border}`,borderRadius:T.r8,display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{fontSize:9,color:T.text3,textTransform:"uppercase",letterSpacing:"0.06em",flexShrink:0}}>Next up</div>
-                    <div style={{fontSize:11,color:T.text2,fontWeight:500}}>{exercises[exIdx+1]?.name}</div>
-                  </div>
-                )}
-              </>
-            )}
+            {/* Notes */}
+            <div style={{marginTop:14,borderTop:`0.5px solid ${T.border}`,paddingTop:12}}>
+              <div style={{fontSize:9,fontWeight:500,color:T.text3,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:6}}>Notes</div>
+              <textarea
+                placeholder={`Form cues, how it felt, adjustments…`}
+                value={exNotes[exIdx]||""}
+                onChange={e=>updateNote(e.target.value)}
+                rows={2}
+                style={{padding:"9px 10px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:12,outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box",resize:"none",lineHeight:1.55}}
+              />
+            </div>
+
+            {/* Navigation */}
+            <div style={{display:"flex",gap:8,marginTop:14}}>
+              {exIdx > 0 && (
+                <button onClick={()=>goToEx(exIdx-1)}
+                  style={{flex:1,padding:"11px 8px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r12,color:T.text2,fontSize:12,fontWeight:500,cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  ← {exercises[exIdx-1]?.name?.split("·")[0].trim()||"Previous"}
+                </button>
+              )}
+              {exIdx < exercises.length-1 ? (
+                <button onClick={()=>goToEx(exIdx+1)}
+                  style={{flex:2,padding:"11px 8px",
+                    background:completedSetsForEx(exIdx)>=totalSets?`linear-gradient(135deg,${T.trainAc},${T.blueMid})`:`${T.trainAc}15`,
+                    border:`0.5px solid ${completedSetsForEx(exIdx)>=totalSets?T.trainAc:T.border2}`,
+                    borderRadius:T.r12,color:completedSetsForEx(exIdx)>=totalSets?"#fff":T.trainAc,
+                    fontSize:12,fontWeight:600,cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  {exercises[exIdx+1]?.name?.split("·")[0].trim()||"Next"} →
+                </button>
+              ) : (
+                <button onClick={()=>setPhase("done")}
+                  style={{flex:2,padding:"11px 8px",background:T.green,border:"none",borderRadius:T.r12,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                  Finish workout ✓
+                </button>
+              )}
+            </div>
+
           </div>
         </div>
       );
