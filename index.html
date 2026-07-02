@@ -5227,18 +5227,53 @@ BEHAVIOUR:
 
     function WorkoutTimer({ exercises, onClose }) {
       const T = React.useContext(ThemeCtx);
-      const [exIdx,     setExIdx]     = useState(0);
-      const [activeSet, setActiveSet] = useState(1);
-      const [phase,     setPhase]     = useState("ready"); // ready | working | resting | done
-      const [secs,      setSecs]      = useState(0);
-      const [setLogs,   setSetLogs]   = useState({}); // "exIdx_setNum" → {weight, reps, done}
-      const [exNotes,   setExNotes]   = useState({}); // exIdx → string
+      const [exIdx,          setExIdx]          = useState(0);
+      const [activeSet,      setActiveSet]      = useState(1);
+      const [phase,          setPhase]          = useState("ready"); // ready | working | resting | done
+      const [secs,           setSecs]           = useState(0);
+      const [setLogs,        setSetLogs]        = useState({}); // "exIdx_setNum" → {weight, reps, done}
+      const [exNotes,        setExNotes]        = useState({}); // exIdx → string
+      const [showHistory,    setShowHistory]    = useState(false);
+      const [expandedSess,   setExpandedSess]   = useState(null);
+      const [workoutHistory, setWorkoutHistory] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("sana_workout_history") || "[]"); }
+        catch { return []; }
+      });
       const timerRef = useRef(null);
       const stateRef = useRef({ exIdx:0, activeSet:1 });
 
       useEffect(() => { stateRef.current.exIdx     = exIdx;     }, [exIdx]);
       useEffect(() => { stateRef.current.activeSet = activeSet; }, [activeSet]);
       useEffect(() => () => clearInterval(timerRef.current), []);
+
+      // Auto-save session to localStorage when workout finishes
+      useEffect(() => {
+        if (phase !== "done") return;
+        const session = {
+          date: new Date().toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric"}),
+          timestamp: Date.now(),
+          exercises: exercises.map((ex, i) => ({
+            name: ex.name,
+            sets: Array.from({length: Math.max(1, parseInt(ex.sets)||3)}, (_, si) => {
+              const lg = setLogs[`${i}_${si+1}`] || {};
+              return { weight: lg.weight||"", reps: lg.reps||"", done: !!lg.done };
+            }),
+            notes: exNotes[i] || ""
+          }))
+        };
+        const updated = [session, ...workoutHistory].slice(0, 50);
+        setWorkoutHistory(updated);
+        try { localStorage.setItem("sana_workout_history", JSON.stringify(updated)); } catch {}
+      }, [phase]);
+
+      // Find the most recent logged session for a given exercise name
+      const getLastSession = (exName) => {
+        for (const sess of workoutHistory) {
+          const found = sess.exercises?.find(e => e.name === exName);
+          if (found && found.sets?.some(s => s.weight || s.reps)) return { sess, ex: found };
+        }
+        return null;
+      };
 
       const ex        = exercises?.[exIdx];
       const totalSets = Math.max(1, parseInt(ex?.sets) || 3);
@@ -5364,35 +5399,44 @@ BEHAVIOUR:
 
           {/* Header */}
           <div style={{padding:"12px 16px 10px",borderBottom:`0.5px solid ${T.border}`,flexShrink:0}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:showHistory?0:10}}>
               <button onClick={onClose}
                 style={{background:T.card2,border:`0.5px solid ${T.border}`,borderRadius:T.r8,padding:"5px 10px",cursor:"pointer",color:T.text2,fontSize:13,fontWeight:500,flexShrink:0}}>
                 ← Exit
               </button>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:9,color:T.text3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:1}}>
-                  Exercise {exIdx+1} of {exercises.length}
-                </div>
-                <div style={{fontSize:14,fontWeight:700,color:T.text,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ex?.name}</div>
+                {showHistory ? (
+                  <div style={{fontSize:14,fontWeight:700,color:T.text}}>Workout History</div>
+                ) : (
+                  <>
+                    <div style={{fontSize:9,color:T.text3,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:1}}>
+                      Exercise {exIdx+1} of {exercises.length}
+                    </div>
+                    <div style={{fontSize:14,fontWeight:700,color:T.text,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ex?.name}</div>
+                  </>
+                )}
               </div>
-              <div style={{textAlign:"right",flexShrink:0}}>
-                <div style={{fontSize:12,fontWeight:600,color:T.trainAc}}>{ex?.sets} sets</div>
-                <div style={{fontSize:10,color:T.text3}}>{ex?.reps} reps</div>
+              <button onClick={()=>setShowHistory(h=>!h)}
+                style={{background:showHistory?T.trainAc:T.card2,border:`0.5px solid ${showHistory?T.trainAc:T.border}`,borderRadius:T.r8,padding:"5px 10px",cursor:"pointer",color:showHistory?"#fff":T.text2,fontSize:11,fontWeight:600,flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
+                <SvgIcon name="clipboard" size={12} color={showHistory?"#fff":T.text2}/>
+                {workoutHistory.length > 0 ? `History (${workoutHistory.length})` : "History"}
+              </button>
+            </div>
+            {/* Exercise dot navigation — hidden in history view */}
+            {!showHistory&&(
+              <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:2}}>
+                {exercises.map((_,i)=>{
+                  const done = completedSetsForEx(i) >= Math.max(1,parseInt(exercises[i]?.sets)||3);
+                  return (
+                    <div key={i} onClick={()=>goToEx(i)} style={{
+                      flexShrink:0, height:6, borderRadius:3, cursor:"pointer", transition:"all .2s",
+                      width:i===exIdx?24:6,
+                      background:done?T.green:i===exIdx?T.trainAc:`${T.trainAc}28`
+                    }}/>
+                  );
+                })}
               </div>
-            </div>
-            {/* Exercise dot navigation */}
-            <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:2}}>
-              {exercises.map((_,i)=>{
-                const done = completedSetsForEx(i) >= Math.max(1,parseInt(exercises[i]?.sets)||3);
-                return (
-                  <div key={i} onClick={()=>goToEx(i)} style={{
-                    flexShrink:0, height:6, borderRadius:3, cursor:"pointer", transition:"all .2s",
-                    width:i===exIdx?24:6,
-                    background:done?T.green:i===exIdx?T.trainAc:`${T.trainAc}28`
-                  }}/>
-                );
-              })}
-            </div>
+            )}
           </div>
 
           {/* Timer banner — shown when working or resting */}
@@ -5424,109 +5468,185 @@ BEHAVIOUR:
           {/* Scrollable main content */}
           <div style={{flex:1,overflowY:"auto",padding:"14px 16px 28px"}}>
 
-            {/* Set prescription reminder */}
-            <div style={{fontSize:10,color:T.text3,marginBottom:10}}>
-              {ex?.sets} sets · {ex?.reps} reps · rest {ex?.rest||"60s"} between sets
-            </div>
-
-            {/* Column headers */}
-            <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr 56px",gap:"0 8px",marginBottom:4,padding:"0 2px"}}>
-              <div style={{fontSize:9,color:T.text3}}>Set</div>
-              <div style={{fontSize:9,color:T.text3}}>Weight</div>
-              <div style={{fontSize:9,color:T.text3}}>Reps done</div>
-              <div/>
-            </div>
-
-            {/* Set rows */}
-            {Array.from({length:totalSets}).map((_,si)=>{
-              const setNum  = si + 1;
-              const key     = `${exIdx}_${setNum}`;
-              const log     = setLogs[key] || {};
-              const isDone  = !!log.done;
-              const isActive = phase==="working" && activeSet===setNum;
-              const isNext  = !isDone && !isActive && setNum===activeSet && phase!=="working";
-
-              return (
-                <div key={si} style={{
-                  display:"grid", gridTemplateColumns:"28px 1fr 1fr 56px", gap:"0 8px",
-                  alignItems:"center", marginBottom:7, padding:"9px 6px",
-                  borderRadius:T.r8, transition:"all .2s",
-                  background:isActive?`${T.trainAc}10`:isDone?`${T.green}08`:isNext?`${T.trainAc}05`:"transparent",
-                  border:`0.5px solid ${isActive?T.trainAc:isDone?`${T.green}50`:T.border}`,
-                }}>
-                  <div style={{fontSize:13,fontWeight:600,textAlign:"center",color:isDone?T.green:isActive?T.trainAc:T.text3}}>
-                    {setNum}
-                  </div>
-                  <input
-                    placeholder="e.g. 80kg"
-                    value={log.weight||""}
-                    onChange={e=>updateLog(setNum,"weight",e.target.value)}
-                    style={iStyle(isActive)}
-                  />
-                  <input
-                    placeholder={ex?.reps||"reps"}
-                    value={log.reps||""}
-                    onChange={e=>updateLog(setNum,"reps",e.target.value)}
-                    style={iStyle(isActive)}
-                  />
-                  <div style={{display:"flex",justifyContent:"center"}}>
-                    {isDone ? (
-                      <div style={{width:32,height:32,borderRadius:"50%",background:`${T.green}18`,border:`1.5px solid ${T.green}60`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:T.green,cursor:"pointer"}}
-                        onClick={()=>setSetLogs(p=>({...p,[key]:{...p[key],done:false}}))}>
-                        ✓
-                      </div>
-                    ) : isActive ? (
-                      <button onClick={()=>completeSet(setNum)}
-                        style={{width:32,height:32,padding:0,background:T.green,border:"none",borderRadius:"50%",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                        ✓
-                      </button>
-                    ) : (
-                      <button onClick={()=>startSet(setNum)}
-                        style={{width:32,height:32,padding:0,background:isNext?T.trainAc:`${T.trainAc}30`,border:"none",borderRadius:"50%",color:"#fff",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}>
-                        ▶
-                      </button>
-                    )}
-                  </div>
+          {showHistory ? (
+            /* ── History panel ── */
+            workoutHistory.length === 0 ? (
+              <div style={{textAlign:"center",padding:"48px 0"}}>
+                <SvgIcon name="clipboard" size={32} color={T.text3}/>
+                <div style={{fontSize:13,color:T.text3,marginTop:12}}>No workout history yet.</div>
+                <div style={{fontSize:11,color:T.text3,marginTop:4}}>Finish your first workout to start tracking.</div>
+              </div>
+            ) : (
+              <>
+                <div style={{fontSize:9,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10}}>
+                  {workoutHistory.length} session{workoutHistory.length!==1?"s":""} logged
                 </div>
-              );
-            })}
+                {workoutHistory.map((sess, si) => {
+                  const isOpen = expandedSess === si;
+                  const logged = sess.exercises?.filter(e => e.sets?.some(s=>s.weight||s.reps)||e.notes).length || 0;
+                  return (
+                    <div key={si} style={{marginBottom:8,borderRadius:T.r8,border:`0.5px solid ${T.border}`,overflow:"hidden"}}>
+                      {/* Session header */}
+                      <div onClick={()=>setExpandedSess(isOpen?null:si)}
+                        style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:T.card,cursor:"pointer"}}>
+                        <div>
+                          <div style={{fontSize:12,fontWeight:600,color:T.text}}>{sess.date}</div>
+                          <div style={{fontSize:10,color:T.text3,marginTop:1}}>
+                            {sess.exercises?.length||0} exercises · {logged} logged
+                          </div>
+                        </div>
+                        <span style={{color:T.text3,fontSize:14,transform:isOpen?"rotate(90deg)":"none",transition:"transform .2s"}}>›</span>
+                      </div>
+                      {/* Expanded session detail */}
+                      {isOpen&&sess.exercises?.map((exData, ei) => (
+                        <div key={ei} style={{borderTop:`0.5px solid ${T.border}`,padding:"10px 12px",background:T.card2}}>
+                          <div style={{fontSize:11,fontWeight:600,color:T.text,marginBottom:6}}>{exData.name}</div>
+                          {exData.sets?.some(s=>s.weight||s.reps) && (
+                            <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr",gap:"3px 8px",marginBottom:exData.notes?8:0}}>
+                              <div style={{fontSize:9,color:T.text3}}>Set</div>
+                              <div style={{fontSize:9,color:T.text3}}>Weight</div>
+                              <div style={{fontSize:9,color:T.text3}}>Reps</div>
+                              {exData.sets.map((s,si2)=>(
+                                <React.Fragment key={si2}>
+                                  <div style={{fontSize:11,color:T.text2,lineHeight:"18px"}}>{si2+1}</div>
+                                  <div style={{fontSize:11,color:s.weight?T.trainAc:T.text3,fontWeight:s.weight?500:400,lineHeight:"18px"}}>{s.weight||"—"}</div>
+                                  <div style={{fontSize:11,color:s.reps?T.text:T.text3,lineHeight:"18px"}}>{s.reps||"—"}</div>
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          )}
+                          {exData.notes&&(
+                            <div style={{fontSize:11,color:T.text2,fontStyle:"italic",lineHeight:1.5,borderTop:`0.5px solid ${T.border}`,paddingTop:6,marginTop:4}}>{exData.notes}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </>
+            )
+          ) : (
+            /* ── Active workout content ── */
+            <>
+              {/* Last session hint for current exercise */}
+              {(()=>{ const last = getLastSession(ex?.name); return last ? (
+                <div style={{marginBottom:10,padding:"7px 10px",background:`${T.trainAc}08`,border:`0.5px solid ${T.trainAc}22`,borderRadius:T.r8,display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{fontSize:9,color:T.trainAc,fontWeight:600,flexShrink:0,textTransform:"uppercase",letterSpacing:"0.05em"}}>Last time</div>
+                  <div style={{fontSize:10,color:T.text2,lineHeight:1.5}}>
+                    {last.ex.sets.filter(s=>s.weight||s.reps).map((s,i)=>`Set ${i+1}: ${s.weight||"BW"}${s.reps?" × "+s.reps:""}`).join(" · ")}
+                    {last.ex.notes&&<span style={{color:T.text3}}> — "{last.ex.notes}"</span>}
+                  </div>
+                  <div style={{fontSize:9,color:T.text3,flexShrink:0,marginLeft:"auto"}}>{last.sess.date}</div>
+                </div>
+              ) : null; })()}
 
-            {/* Notes */}
-            <div style={{marginTop:14,borderTop:`0.5px solid ${T.border}`,paddingTop:12}}>
-              <div style={{fontSize:9,fontWeight:500,color:T.text3,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:6}}>Notes</div>
-              <textarea
-                placeholder={`Form cues, how it felt, adjustments…`}
-                value={exNotes[exIdx]||""}
-                onChange={e=>updateNote(e.target.value)}
-                rows={2}
-                style={{padding:"9px 10px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:12,outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box",resize:"none",lineHeight:1.55}}
-              />
-            </div>
+              {/* Set prescription */}
+              <div style={{fontSize:10,color:T.text3,marginBottom:10}}>
+                {ex?.sets} sets · {ex?.reps} reps · rest {ex?.rest||"60s"} between sets
+              </div>
 
-            {/* Navigation */}
-            <div style={{display:"flex",gap:8,marginTop:14}}>
-              {exIdx > 0 && (
-                <button onClick={()=>goToEx(exIdx-1)}
-                  style={{flex:1,padding:"11px 8px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r12,color:T.text2,fontSize:12,fontWeight:500,cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                  ← {exercises[exIdx-1]?.name?.split("·")[0].trim()||"Previous"}
-                </button>
-              )}
-              {exIdx < exercises.length-1 ? (
-                <button onClick={()=>goToEx(exIdx+1)}
-                  style={{flex:2,padding:"11px 8px",
-                    background:completedSetsForEx(exIdx)>=totalSets?`linear-gradient(135deg,${T.trainAc},${T.blueMid})`:`${T.trainAc}15`,
-                    border:`0.5px solid ${completedSetsForEx(exIdx)>=totalSets?T.trainAc:T.border2}`,
-                    borderRadius:T.r12,color:completedSetsForEx(exIdx)>=totalSets?"#fff":T.trainAc,
-                    fontSize:12,fontWeight:600,cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                  {exercises[exIdx+1]?.name?.split("·")[0].trim()||"Next"} →
-                </button>
-              ) : (
-                <button onClick={()=>setPhase("done")}
-                  style={{flex:2,padding:"11px 8px",background:T.green,border:"none",borderRadius:T.r12,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                  Finish workout ✓
-                </button>
-              )}
-            </div>
+              {/* Column headers */}
+              <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr 56px",gap:"0 8px",marginBottom:4,padding:"0 2px"}}>
+                <div style={{fontSize:9,color:T.text3}}>Set</div>
+                <div style={{fontSize:9,color:T.text3}}>Weight</div>
+                <div style={{fontSize:9,color:T.text3}}>Reps done</div>
+                <div/>
+              </div>
+
+              {/* Set rows */}
+              {Array.from({length:totalSets}).map((_,si)=>{
+                const setNum   = si + 1;
+                const key      = `${exIdx}_${setNum}`;
+                const log      = setLogs[key] || {};
+                const isDone   = !!log.done;
+                const isActive = phase==="working" && activeSet===setNum;
+                const isNext   = !isDone && !isActive && setNum===activeSet && phase!=="working";
+                const lastEx   = getLastSession(ex?.name)?.ex;
+                const lastSet  = lastEx?.sets?.[si];
+
+                return (
+                  <div key={si} style={{
+                    display:"grid", gridTemplateColumns:"28px 1fr 1fr 56px", gap:"0 8px",
+                    alignItems:"center", marginBottom:7, padding:"9px 6px",
+                    borderRadius:T.r8, transition:"all .2s",
+                    background:isActive?`${T.trainAc}10`:isDone?`${T.green}08`:isNext?`${T.trainAc}05`:"transparent",
+                    border:`0.5px solid ${isActive?T.trainAc:isDone?`${T.green}50`:T.border}`,
+                  }}>
+                    <div style={{fontSize:13,fontWeight:600,textAlign:"center",color:isDone?T.green:isActive?T.trainAc:T.text3}}>
+                      {setNum}
+                    </div>
+                    <input
+                      placeholder={lastSet?.weight ? `Last: ${lastSet.weight}` : "e.g. 80kg"}
+                      value={log.weight||""}
+                      onChange={e=>updateLog(setNum,"weight",e.target.value)}
+                      style={iStyle(isActive)}
+                    />
+                    <input
+                      placeholder={lastSet?.reps ? `Last: ${lastSet.reps}` : (ex?.reps||"reps")}
+                      value={log.reps||""}
+                      onChange={e=>updateLog(setNum,"reps",e.target.value)}
+                      style={iStyle(isActive)}
+                    />
+                    <div style={{display:"flex",justifyContent:"center"}}>
+                      {isDone ? (
+                        <div style={{width:32,height:32,borderRadius:"50%",background:`${T.green}18`,border:`1.5px solid ${T.green}60`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:T.green,cursor:"pointer"}}
+                          onClick={()=>setSetLogs(p=>({...p,[key]:{...p[key],done:false}}))}>
+                          ✓
+                        </div>
+                      ) : isActive ? (
+                        <button onClick={()=>completeSet(setNum)}
+                          style={{width:32,height:32,padding:0,background:T.green,border:"none",borderRadius:"50%",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          ✓
+                        </button>
+                      ) : (
+                        <button onClick={()=>startSet(setNum)}
+                          style={{width:32,height:32,padding:0,background:isNext?T.trainAc:`${T.trainAc}30`,border:"none",borderRadius:"50%",color:"#fff",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}>
+                          ▶
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Notes */}
+              <div style={{marginTop:14,borderTop:`0.5px solid ${T.border}`,paddingTop:12}}>
+                <div style={{fontSize:9,fontWeight:500,color:T.text3,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:6}}>Notes</div>
+                <textarea
+                  placeholder="Form cues, how it felt, adjustments…"
+                  value={exNotes[exIdx]||""}
+                  onChange={e=>updateNote(e.target.value)}
+                  rows={2}
+                  style={{padding:"9px 10px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:12,outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box",resize:"none",lineHeight:1.55}}
+                />
+              </div>
+
+              {/* Navigation */}
+              <div style={{display:"flex",gap:8,marginTop:14}}>
+                {exIdx > 0 && (
+                  <button onClick={()=>goToEx(exIdx-1)}
+                    style={{flex:1,padding:"11px 8px",background:T.card,border:`0.5px solid ${T.border2}`,borderRadius:T.r12,color:T.text2,fontSize:12,fontWeight:500,cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    ← {exercises[exIdx-1]?.name?.split("·")[0].trim()||"Previous"}
+                  </button>
+                )}
+                {exIdx < exercises.length-1 ? (
+                  <button onClick={()=>goToEx(exIdx+1)}
+                    style={{flex:2,padding:"11px 8px",
+                      background:completedSetsForEx(exIdx)>=totalSets?`linear-gradient(135deg,${T.trainAc},${T.blueMid})`:`${T.trainAc}15`,
+                      border:`0.5px solid ${completedSetsForEx(exIdx)>=totalSets?T.trainAc:T.border2}`,
+                      borderRadius:T.r12,color:completedSetsForEx(exIdx)>=totalSets?"#fff":T.trainAc,
+                      fontSize:12,fontWeight:600,cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {exercises[exIdx+1]?.name?.split("·")[0].trim()||"Next"} →
+                  </button>
+                ) : (
+                  <button onClick={()=>setPhase("done")}
+                    style={{flex:2,padding:"11px 8px",background:T.green,border:"none",borderRadius:T.r12,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                    Finish workout ✓
+                  </button>
+                )}
+              </div>
+            </>
+          )}
 
           </div>
         </div>
