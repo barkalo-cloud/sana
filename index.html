@@ -2853,6 +2853,31 @@
       const T = React.useContext(ThemeCtx);
       const [activePillar, setActivePillar] = useState(null);
       const [reviewOpen,   setReviewOpen]   = useState(false);
+      const [trainTab,     setTrainTab]     = useState("today");
+      const [workoutHist,  setWorkoutHist]  = useState(()=>{ try{return JSON.parse(localStorage.getItem("sana_workout_history")||"[]");}catch{return[];} });
+      const [bodyMetrics,  setBodyMetrics]  = useState(()=>{ try{return JSON.parse(localStorage.getItem("sana_body_metrics")||"[]");}catch{return[];} });
+      const [waterCups,    setWaterCups]    = useState(()=>{ try{const s=JSON.parse(localStorage.getItem("sana_water")||"{}");return s[new Date().toDateString()]||0;}catch{return 0;} });
+      const [bwInput,  setBwInput]  = useState("");
+      const [bwUnit,   setBwUnit]   = useState("lbs");
+      const [bfInput,  setBfInput]  = useState("");
+      useEffect(()=>{ try{setWorkoutHist(JSON.parse(localStorage.getItem("sana_workout_history")||"[]"));}catch{} },[todayWorkout]);
+      const addWater = delta => {
+        const next = Math.max(0, Math.min(12, waterCups + delta));
+        setWaterCups(next);
+        try{ const s=JSON.parse(localStorage.getItem("sana_water")||"{}"); s[new Date().toDateString()]=next; localStorage.setItem("sana_water",JSON.stringify(s)); }catch{}
+      };
+      const tapWaterDot = n => {
+        setWaterCups(n);
+        try{ const s=JSON.parse(localStorage.getItem("sana_water")||"{}"); s[new Date().toDateString()]=n; localStorage.setItem("sana_water",JSON.stringify(s)); }catch{}
+      };
+      const logBodyMetric = () => {
+        const w = parseFloat(bwInput);
+        if (isNaN(w)||w<=0) return;
+        const entry = { date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}), timestamp:Date.now(), weight:w, unit:bwUnit, bodyFat:parseFloat(bfInput)||null };
+        const updated = [entry, ...bodyMetrics].slice(0,50);
+        setBodyMetrics(updated); setBwInput(""); setBfInput("");
+        try{ localStorage.setItem("sana_body_metrics",JSON.stringify(updated)); }catch{}
+      };
       const {trainSession,trainNote,trainExercises,calToday,protToday,carbNote,meals,nutritionNote,suppSchedule,suppNote,suppRecommendations,sleepTarget,bedtime,winddown,sleepNote,sleepGoalNote,sleepSexNote,lowR,hiS,great,socialPlan} = plans;
       const f    = userProfile.sex === "Female";
       const name = userProfile.name || "there";
@@ -2952,128 +2977,212 @@
             {/* ── PILLAR MODALS ── */}
             {activePillar==="train"&&(
               <PillarModal icon="dumbbell" label="Train" accent={T.trainAc} badge={`${trainSession} · ${trainExercises.length} exercises`} onClose={()=>setActivePillar(null)}>
-                <div style={{padding:"8px 10px",background:`${T.trainAc}12`,border:`0.5px solid ${T.trainAc}30`,borderRadius:T.r8,marginBottom:12}}>
-                  <div style={{fontSize:12,fontWeight:500,color:T.trainAc,marginBottom:3}}>{trainSession}</div>
-                  <div style={{fontSize:11,color:T.text2,lineHeight:1.6}}>{trainNote}</div>
+
+                {/* ── Tab bar ── */}
+                <div style={{display:"flex",gap:6,marginBottom:14}}>
+                  {[["today","Today"],["progress","Progress"]].map(([tab,label])=>(
+                    <button key={tab} onClick={()=>setTrainTab(tab)}
+                      style={{flex:1,padding:"7px",border:`0.5px solid ${trainTab===tab?T.trainAc:T.border2}`,borderRadius:T.r8,
+                        background:trainTab===tab?T.trainAc:T.card,color:trainTab===tab?"#fff":T.text2,
+                        fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}}>
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <SLabel c="Exercises — tap to complete · swap to substitute" mb={8}/>
-                {trainExercises.map((ex,i)=>(
-                  <ExerciseRow key={i} ex={ex} idx={i} isChecked={!!checkedItems[`train_${i}`]} onToggle={onCheck} onSwap={onSwap}/>
-                ))}
-                {!todayWorkout&&(
-                  <button onClick={()=>{setActivePillar(null);onStartWorkout();}}
-                    style={{width:"100%",marginTop:4,marginBottom:12,padding:"13px",
-                      background:workoutStarted
-                        ?`linear-gradient(135deg,${T.trainAc}cc,${T.trainAc})`
-                        :`linear-gradient(135deg,${T.trainAc},${T.blueMid})`,
-                      border:"none",borderRadius:T.r12,color:"#fff",fontSize:13,fontWeight:700,
-                      cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,
-                      boxShadow:`0 4px 18px ${T.trainAc}40`}}>
-                    {workoutStarted
-                      ? (<><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/><line x1="19" y1="6" x2="19" y2="18"/></svg>Resume Workout</>)
-                      : (<><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Workout — sets, reps &amp; rest timer</>)
-                    }
-                  </button>
-                )}
-                {/* Review today's workout */}
-                {todayWorkout&&(
-                  <div style={{marginBottom:10,borderRadius:T.r8,border:`0.5px solid ${T.trainAc}40`,overflow:"hidden"}}>
-                    <div onClick={()=>setReviewOpen(o=>!o)}
-                      style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:`${T.trainAc}10`,cursor:"pointer"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:7}}>
-                        <SvgIcon name="trophy" size={13} color={T.trainAc}/>
-                        <span style={{fontSize:12,fontWeight:600,color:T.trainAc}}>Review today's workout</span>
-                      </div>
-                      <span style={{color:T.trainAc,fontSize:14,transform:reviewOpen?"rotate(90deg)":"none",transition:"transform .2s"}}>›</span>
-                    </div>
-                    {reviewOpen&&(()=>{
-                      // ── Compute stats ──────────────────────────────
-                      let totalVol = 0, volUnit = "", volCount = 0;
-                      let totalReps = 0, setsCompleted = 0;
-                      let heaviestW = 0, heaviestName = "";
-                      todayWorkout.exercises?.forEach(ex => {
-                        ex.sets?.forEach(s => {
-                          if (!s.done) return;
-                          setsCompleted++;
-                          const reps = parseInt(s.reps) || 0;
-                          totalReps += reps;
-                          if (s.weight) {
-                            const w = parseFloat(s.weight.replace(/[^0-9.]/g, ""));
-                            if (!isNaN(w) && w > 0) {
-                              const u = /lb/i.test(s.weight) ? "lbs" : /kg/i.test(s.weight) ? "kg" : "";
-                              if (!volUnit && u) volUnit = u;
-                              totalVol += w * reps;
-                              volCount++;
-                              if (w > heaviestW) { heaviestW = w; heaviestName = ex.name; }
-                            }
-                          }
-                        });
-                      });
-                      const exDone = todayWorkout.exercises?.filter(ex => ex.sets?.some(s => s.done)).length || 0;
-                      const exTotal = todayWorkout.exercises?.length || 0;
-                      const durationMin = todayWorkout.durationMs ? Math.round(todayWorkout.durationMs / 60000) : null;
-                      const avgRestSec  = (todayWorkout.restCount && todayWorkout.totalRestMs)
-                        ? Math.round(todayWorkout.totalRestMs / todayWorkout.restCount / 1000) : null;
-                      const fmtDur = durationMin != null
-                        ? (durationMin >= 60 ? `${Math.floor(durationMin/60)}h ${durationMin%60}m` : `${durationMin} min`) : "—";
-                      const fmtRest = avgRestSec != null
-                        ? (avgRestSec >= 60 ? `${Math.floor(avgRestSec/60)}m ${avgRestSec%60}s` : `${avgRestSec}s`) : "—";
-                      const fmtVol  = totalVol > 0 ? `${Math.round(totalVol).toLocaleString()}${volUnit ? " "+volUnit : ""}` : "—";
-                      const statsItems = [
-                        { label:"Duration",      value:fmtDur },
-                        { label:"Total volume",  value:fmtVol },
-                        { label:"Avg rest",      value:fmtRest },
-                        { label:"Sets done",     value:setsCompleted > 0 ? String(setsCompleted) : "—" },
-                        { label:"Total reps",    value:totalReps > 0 ? String(totalReps) : "—" },
-                        { label:"Exercises",     value:exTotal > 0 ? `${exDone}/${exTotal}` : "—" },
-                      ];
-                      return (<>
-                        {/* Stats grid */}
-                        <div style={{borderTop:`0.5px solid ${T.border}`,padding:"10px 12px",background:T.card}}>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom: heaviestW > 0 ? 8 : 0}}>
-                            {statsItems.map(({label,value})=>(
-                              <div key={label} style={{background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,padding:"7px 8px",textAlign:"center"}}>
-                                <div style={{fontSize:9,color:T.text3,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:3}}>{label}</div>
-                                <div style={{fontSize:13,fontWeight:700,color:T.trainAc,lineHeight:1}}>{value}</div>
-                              </div>
-                            ))}
-                          </div>
-                          {heaviestW > 0&&(
-                            <div style={{fontSize:10,color:T.text3,textAlign:"center"}}>
-                              Heaviest lift: <span style={{color:T.text,fontWeight:600}}>{heaviestW}{volUnit?` ${volUnit}`:""} — {heaviestName}</span>
-                            </div>
-                          )}
+
+                {/* ── TODAY TAB ── */}
+                {trainTab==="today"&&(<>
+                  <div style={{padding:"8px 10px",background:`${T.trainAc}12`,border:`0.5px solid ${T.trainAc}30`,borderRadius:T.r8,marginBottom:12}}>
+                    <div style={{fontSize:12,fontWeight:500,color:T.trainAc,marginBottom:3}}>{trainSession}</div>
+                    <div style={{fontSize:11,color:T.text2,lineHeight:1.6}}>{trainNote}</div>
+                  </div>
+                  <SLabel c="Exercises — tap to complete · swap to substitute" mb={8}/>
+                  {trainExercises.map((ex,i)=>(
+                    <ExerciseRow key={i} ex={ex} idx={i} isChecked={!!checkedItems[`train_${i}`]} onToggle={onCheck} onSwap={onSwap}/>
+                  ))}
+                  {!todayWorkout&&(
+                    <button onClick={()=>{setActivePillar(null);onStartWorkout();}}
+                      style={{width:"100%",marginTop:4,marginBottom:12,padding:"13px",
+                        background:workoutStarted?`linear-gradient(135deg,${T.trainAc}cc,${T.trainAc})`:`linear-gradient(135deg,${T.trainAc},${T.blueMid})`,
+                        border:"none",borderRadius:T.r12,color:"#fff",fontSize:13,fontWeight:700,
+                        cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+                        boxShadow:`0 4px 18px ${T.trainAc}40`}}>
+                      {workoutStarted
+                        ?(<><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/><line x1="19" y1="6" x2="19" y2="18"/></svg>Resume Workout</>)
+                        :(<><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Workout — sets, reps &amp; rest timer</>)
+                      }
+                    </button>
+                  )}
+                  {todayWorkout&&(
+                    <div style={{marginBottom:10,borderRadius:T.r8,border:`0.5px solid ${T.trainAc}40`,overflow:"hidden"}}>
+                      <div onClick={()=>setReviewOpen(o=>!o)}
+                        style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:`${T.trainAc}10`,cursor:"pointer"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:7}}>
+                          <SvgIcon name="trophy" size={13} color={T.trainAc}/>
+                          <span style={{fontSize:12,fontWeight:600,color:T.trainAc}}>Review today's workout</span>
                         </div>
-                        {/* Per-exercise breakdown */}
-                        {todayWorkout.exercises?.map((exData,ei)=>(
-                          <div key={ei} style={{borderTop:`0.5px solid ${T.border}`,padding:"10px 12px",background:T.card}}>
-                            <div style={{fontSize:11,fontWeight:600,color:T.text,marginBottom:exData.sets?.some(s=>s.weight||s.reps)?6:0}}>{exData.name}</div>
-                            {exData.sets?.some(s=>s.weight||s.reps)&&(
-                              <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr",gap:"3px 8px",marginBottom:exData.notes?6:0}}>
-                                <div style={{fontSize:9,color:T.text3}}>Set</div>
-                                <div style={{fontSize:9,color:T.text3}}>Weight</div>
-                                <div style={{fontSize:9,color:T.text3}}>Reps</div>
-                                {exData.sets.map((s,si)=>(
-                                  <React.Fragment key={si}>
+                        <span style={{color:T.trainAc,fontSize:14,transform:reviewOpen?"rotate(90deg)":"none",transition:"transform .2s"}}>›</span>
+                      </div>
+                      {reviewOpen&&(()=>{
+                        let totalVol=0,volUnit="",totalReps=0,setsCompleted=0,heaviestW=0,heaviestName="";
+                        todayWorkout.exercises?.forEach(ex=>{
+                          ex.sets?.forEach(s=>{
+                            if(!s.done) return;
+                            setsCompleted++;
+                            const reps=parseInt(s.reps)||0; totalReps+=reps;
+                            if(s.weight){ const w=parseFloat(s.weight.replace(/[^0-9.]/g,"")); if(!isNaN(w)&&w>0){ const u=/lb/i.test(s.weight)?"lbs":/kg/i.test(s.weight)?"kg":""; if(!volUnit&&u)volUnit=u; totalVol+=w*reps; if(w>heaviestW){heaviestW=w;heaviestName=ex.name;} } }
+                          });
+                        });
+                        const exDone=todayWorkout.exercises?.filter(ex=>ex.sets?.some(s=>s.done)).length||0;
+                        const exTotal=todayWorkout.exercises?.length||0;
+                        const durationMin=todayWorkout.durationMs?Math.round(todayWorkout.durationMs/60000):null;
+                        const avgRestSec=(todayWorkout.restCount&&todayWorkout.totalRestMs)?Math.round(todayWorkout.totalRestMs/todayWorkout.restCount/1000):null;
+                        const fmtDur=durationMin!=null?(durationMin>=60?`${Math.floor(durationMin/60)}h ${durationMin%60}m`:`${durationMin} min`):"—";
+                        const fmtRest=avgRestSec!=null?(avgRestSec>=60?`${Math.floor(avgRestSec/60)}m ${avgRestSec%60}s`:`${avgRestSec}s`):"—";
+                        const fmtVol=totalVol>0?`${Math.round(totalVol).toLocaleString()}${volUnit?" "+volUnit:""}`:"—";
+                        const statsItems=[{label:"Duration",value:fmtDur},{label:"Total volume",value:fmtVol},{label:"Avg rest",value:fmtRest},{label:"Sets done",value:setsCompleted>0?String(setsCompleted):"—"},{label:"Total reps",value:totalReps>0?String(totalReps):"—"},{label:"Exercises",value:exTotal>0?`${exDone}/${exTotal}`:"—"}];
+                        return (<>
+                          <div style={{borderTop:`0.5px solid ${T.border}`,padding:"10px 12px",background:T.card}}>
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:heaviestW>0?8:0}}>
+                              {statsItems.map(({label,value})=>(
+                                <div key={label} style={{background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,padding:"7px 8px",textAlign:"center"}}>
+                                  <div style={{fontSize:9,color:T.text3,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:3}}>{label}</div>
+                                  <div style={{fontSize:13,fontWeight:700,color:T.trainAc,lineHeight:1}}>{value}</div>
+                                </div>
+                              ))}
+                            </div>
+                            {heaviestW>0&&<div style={{fontSize:10,color:T.text3,textAlign:"center"}}>Heaviest lift: <span style={{color:T.text,fontWeight:600}}>{heaviestW}{volUnit?` ${volUnit}`:""} — {heaviestName}</span></div>}
+                          </div>
+                          {todayWorkout.exercises?.map((exData,ei)=>(
+                            <div key={ei} style={{borderTop:`0.5px solid ${T.border}`,padding:"10px 12px",background:T.card}}>
+                              <div style={{fontSize:11,fontWeight:600,color:T.text,marginBottom:exData.sets?.some(s=>s.weight||s.reps)?6:0}}>{exData.name}</div>
+                              {exData.sets?.some(s=>s.weight||s.reps)&&(
+                                <div style={{display:"grid",gridTemplateColumns:"28px 1fr 1fr",gap:"3px 8px",marginBottom:exData.notes?6:0}}>
+                                  <div style={{fontSize:9,color:T.text3}}>Set</div><div style={{fontSize:9,color:T.text3}}>Weight</div><div style={{fontSize:9,color:T.text3}}>Reps</div>
+                                  {exData.sets.map((s,si)=>(<React.Fragment key={si}>
                                     <div style={{fontSize:11,color:T.text2,lineHeight:"18px"}}>{si+1}</div>
                                     <div style={{fontSize:11,color:s.weight?T.trainAc:T.text3,fontWeight:s.weight?500:400,lineHeight:"18px"}}>{s.weight||"—"}</div>
                                     <div style={{fontSize:11,color:s.reps?T.text:T.text3,lineHeight:"18px"}}>{s.reps||"—"}</div>
-                                  </React.Fragment>
-                                ))}
-                              </div>
-                            )}
-                            {exData.notes&&<div style={{fontSize:11,color:T.text2,fontStyle:"italic",lineHeight:1.5,borderTop:exData.sets?.some(s=>s.weight||s.reps)?`0.5px solid ${T.border}`:"none",paddingTop:exData.sets?.some(s=>s.weight||s.reps)?5:0,marginTop:exData.sets?.some(s=>s.weight||s.reps)?4:0}}>{exData.notes}</div>}
+                                  </React.Fragment>))}
+                                </div>
+                              )}
+                              {exData.notes&&<div style={{fontSize:11,color:T.text2,fontStyle:"italic",lineHeight:1.5,borderTop:exData.sets?.some(s=>s.weight||s.reps)?`0.5px solid ${T.border}`:"none",paddingTop:exData.sets?.some(s=>s.weight||s.reps)?5:0,marginTop:exData.sets?.some(s=>s.weight||s.reps)?4:0}}>{exData.notes}</div>}
+                            </div>
+                          ))}
+                        </>);
+                      })()}
+                    </div>
+                  )}
+                  <div style={{padding:"9px 11px",background:T.blueSoft,border:`0.5px solid ${T.border2}`,borderRadius:T.r8}}>
+                    <div style={{fontSize:10,fontWeight:500,color:T.accent,marginBottom:3}}>The science</div>
+                    <div style={{fontSize:11,color:T.text2,lineHeight:1.55}}>{lowR&&hiS?"Cortisol rises sharply when you train hard under accumulated stress — lighter work protects the adaptation from your last session.":great?"High energy + low soreness + good sleep = maximum anabolic environment. Don't waste it.":"Consistent work at moderate intensity compounds over weeks. Today's session matters."}</div>
+                    <div style={{fontSize:10,color:T.text3,marginTop:3}}>Cadegiani &amp; Kater, 2017 · Schoenfeld, 2010</div>
+                  </div>
+                </>)}
+
+                {/* ── PROGRESS TAB ── */}
+                {trainTab==="progress"&&(()=>{
+                  const sevenDaysAgo = Date.now()-7*24*60*60*1000;
+                  const weekCount = workoutHist.filter(s=>s.timestamp>=sevenDaysAgo).length;
+                  const wDays = new Set(workoutHist.map(s=>new Date(s.timestamp).toDateString()));
+                  let streak=0; const cd=new Date();
+                  for(let i=0;i<365;i++){ if(wDays.has(cd.toDateString())){streak++;cd.setDate(cd.getDate()-1);}else if(i===0){cd.setDate(cd.getDate()-1);}else break; }
+                  const prMap={};
+                  workoutHist.forEach(sess=>{ sess.exercises?.forEach(ex=>{ ex.sets?.forEach(s=>{ if(!s.done||!s.weight)return; const w=parseFloat(s.weight.replace(/[^0-9.]/g,"")); if(isNaN(w)||w<=0)return; if(!prMap[ex.name]||w>prMap[ex.name].w) prMap[ex.name]={w,unit:/lb/i.test(s.weight)?"lbs":/kg/i.test(s.weight)?"kg":"",date:sess.date}; }); }); });
+                  const prs=Object.entries(prMap).map(([name,d])=>({name,...d})).sort((a,b)=>b.w-a.w).slice(0,8);
+                  const bmTrend = bodyMetrics.length>=2 ? (bodyMetrics[0].weight-bodyMetrics[1].weight) : null;
+                  return (<>
+
+                    {/* Weekly recap */}
+                    <div style={{marginBottom:12,padding:"12px 14px",background:T.card,border:`0.5px solid ${T.border}`,borderRadius:T.r12}}>
+                      <div style={{fontSize:9,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10}}>Overview</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,textAlign:"center",marginBottom:weekCount>0?10:0}}>
+                        {[{label:"This week",value:weekCount>0?String(weekCount):"0"},{label:"Streak",value:streak>0?`${streak}d`:"—"},{label:"All time",value:String(workoutHist.length)}].map(st=>(
+                          <div key={st.label} style={{background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,padding:"8px 4px"}}>
+                            <div style={{fontSize:20,fontWeight:700,color:T.trainAc,lineHeight:1}}>{st.value}</div>
+                            <div style={{fontSize:9,color:T.text3,marginTop:3}}>{st.label}</div>
                           </div>
                         ))}
-                      </>);
-                    })()}
-                  </div>
-                )}
-                <div style={{padding:"9px 11px",background:T.blueSoft,border:`0.5px solid ${T.border2}`,borderRadius:T.r8}}>
-                  <div style={{fontSize:10,fontWeight:500,color:T.accent,marginBottom:3}}>The science</div>
-                  <div style={{fontSize:11,color:T.text2,lineHeight:1.55}}>{lowR&&hiS?"Cortisol rises sharply when you train hard under accumulated stress — lighter work protects the adaptation from your last session.":great?"High energy + low soreness + good sleep = maximum anabolic environment. Don't waste it.":"Consistent work at moderate intensity compounds over weeks. Today's session matters."}</div>
-                  <div style={{fontSize:10,color:T.text3,marginTop:3}}>Cadegiani &amp; Kater, 2017 · Schoenfeld, 2010</div>
-                </div>
+                      </div>
+                      {weekCount>0&&<div style={{fontSize:10,color:T.text2,lineHeight:1.55}}>{weekCount>=4?`Great week — ${weekCount} sessions in.`:weekCount>=2?`${weekCount} sessions this week. Building momentum.`:"1 session down this week. Keep going."}{streak>=3?` ${streak}-day streak — don't break the chain.`:""}</div>}
+                    </div>
+
+                    {/* Personal records */}
+                    {prs.length>0&&(
+                      <div style={{marginBottom:12}}>
+                        <div style={{fontSize:9,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:6}}>Personal records</div>
+                        <div style={{background:T.card,border:`0.5px solid ${T.border}`,borderRadius:T.r12,overflow:"hidden"}}>
+                          {prs.map((pr,i)=>(
+                            <div key={pr.name} style={{display:"flex",alignItems:"center",padding:"8px 12px",borderTop:i>0?`0.5px solid ${T.border}`:"none"}}>
+                              <div style={{flex:1,fontSize:11,fontWeight:500,color:T.text}}>{pr.name}</div>
+                              <div style={{fontSize:12,fontWeight:700,color:T.trainAc,marginRight:10}}>{pr.w}{pr.unit?" "+pr.unit:""}</div>
+                              <div style={{fontSize:9,color:T.text3}}>{pr.date}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Body metrics */}
+                    <div style={{marginBottom:12}}>
+                      <div style={{fontSize:9,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:6}}>Body metrics</div>
+                      <div style={{background:T.card,border:`0.5px solid ${T.border}`,borderRadius:T.r12,padding:"10px 12px"}}>
+                        <div style={{display:"flex",gap:6,marginBottom:bodyMetrics.length>0?10:0}}>
+                          <input value={bwInput} onChange={e=>setBwInput(e.target.value)} placeholder="Weight"
+                            style={{flex:2,padding:"7px 8px",background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:12,outline:"none",fontFamily:"inherit"}}/>
+                          <button onClick={()=>setBwUnit(u=>u==="lbs"?"kg":"lbs")}
+                            style={{padding:"7px 10px",background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text2,fontSize:11,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+                            {bwUnit}
+                          </button>
+                          <input value={bfInput} onChange={e=>setBfInput(e.target.value)} placeholder="BF%"
+                            style={{flex:1,padding:"7px 8px",background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:12,outline:"none",fontFamily:"inherit"}}/>
+                          <button onClick={logBodyMetric}
+                            style={{padding:"7px 12px",background:T.trainAc,border:"none",borderRadius:T.r8,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                            Log
+                          </button>
+                        </div>
+                        {bodyMetrics.length===0&&<div style={{fontSize:11,color:T.text3,textAlign:"center",padding:"4px 0"}}>No entries yet — log your first weigh-in above</div>}
+                        {bodyMetrics.slice(0,5).map((m,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",padding:"5px 0",borderTop:`0.5px solid ${T.border}`}}>
+                            <div style={{fontSize:10,color:T.text3,flex:1}}>{m.date}</div>
+                            <div style={{fontSize:11,fontWeight:500,color:T.text,marginRight:8}}>{m.weight} {m.unit}</div>
+                            {m.bodyFat&&<div style={{fontSize:10,color:T.text2}}>{m.bodyFat}% BF</div>}
+                            {i===0&&bmTrend!=null&&bmTrend!==0&&<div style={{fontSize:10,color:bmTrend<0?T.green:T.amber,marginLeft:6}}>{bmTrend>0?"+":""}{bmTrend.toFixed(1)}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Water intake */}
+                    <div style={{marginBottom:6}}>
+                      <div style={{fontSize:9,fontWeight:600,color:T.text3,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:6}}>Water today</div>
+                      <div style={{background:T.card,border:`0.5px solid ${T.border}`,borderRadius:T.r12,padding:"12px 14px"}}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                          <button onClick={()=>addWater(-1)} style={{width:34,height:34,background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>−</button>
+                          <div style={{textAlign:"center"}}>
+                            <div style={{fontSize:26,fontWeight:700,color:T.trainAc,lineHeight:1}}>{waterCups}</div>
+                            <div style={{fontSize:9,color:T.text3,marginTop:2}}>of 8 cups</div>
+                          </div>
+                          <button onClick={()=>addWater(1)} style={{width:34,height:34,background:T.bg,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,color:T.text,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>+</button>
+                        </div>
+                        <div style={{display:"flex",gap:5,justifyContent:"center"}}>
+                          {Array.from({length:8}).map((_,i)=>(
+                            <div key={i} onClick={()=>tapWaterDot(i+1)}
+                              style={{width:26,height:10,borderRadius:5,background:i<waterCups?T.trainAc:`${T.trainAc}20`,cursor:"pointer",transition:"background .15s"}}/>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Weekly recap note */}
+                    {workoutHist.length===0&&(
+                      <div style={{padding:"9px 11px",background:T.blueSoft,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,fontSize:11,color:T.text2,lineHeight:1.6}}>
+                        Complete your first workout to start tracking PRs and weekly volume.
+                      </div>
+                    )}
+                  </>);
+                })()}
+
               </PillarModal>
             )}
 
