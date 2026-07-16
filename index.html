@@ -190,7 +190,7 @@
        viewport regardless of dvh-in-fixed-context rounding quirks. Every
        descendant below just overlays it exactly via inset:0 too, instead
        of each independently computing its own height. */
-    html.pwa-mode .hero { position: fixed; inset: 0; display: block; padding: 0; background: #ff00ff; overflow: hidden; } /* TEMP DEBUG: hot pink */
+    html.pwa-mode .hero { position: fixed; inset: 0; display: block; padding: 0; background: #080d1a; overflow: hidden; }
     html.pwa-mode .hero-inner { position: absolute; inset: 0; display: block; padding: 0; max-width: none; }
     html.pwa-mode .hero-text { display: none !important; }
     html.pwa-mode .hero-phone { position: absolute; inset: 0; width: auto; height: auto; }
@@ -203,7 +203,6 @@
     html.pwa-mode .phone-home-btn { display: none !important; }
     html.pwa-mode .app-screen {
       position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; border: none;
-      background: #00e5ff !important; /* TEMP DEBUG: cyan */
     }
 
     /* ── HOW IT WORKS ── */
@@ -5916,12 +5915,12 @@ BEHAVIOUR:
       /* ── First-launch guard ── render setup before any userProfile access ── */
       if (!userProfile) {
         if (setupLoading) return (
-          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",position:"absolute",top:0,left:0,right:0,bottom:0,paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
             <SetupLoadingScreen name={pendingProfile?.name}/>
           </div>
         );
         return (
-          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",position:"absolute",top:0,left:0,right:0,bottom:0,overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
             <SetupScreen onDone={p => {
               setPendingProfile(p);
               setSetupLoading(true);
@@ -6075,7 +6074,7 @@ BEHAVIOUR:
       return (
         <ThemeCtx.Provider value={T}>
         <SetThemeCtx.Provider value={toggleTheme}>
-        <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)"}}>
+        <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)"}}>
 
           {/* ── CHAT ── */}
           {tab==="chat"&&(
