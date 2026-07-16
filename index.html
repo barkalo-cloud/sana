@@ -190,7 +190,7 @@
        viewport regardless of dvh-in-fixed-context rounding quirks. Every
        descendant below just overlays it exactly via inset:0 too, instead
        of each independently computing its own height. */
-    html.pwa-mode .hero { position: fixed; inset: 0; display: block; padding: 0; background: #080d1a; overflow: hidden; }
+    html.pwa-mode .hero { position: fixed; inset: 0; display: block; padding: 0; background: #ff00ff; overflow: hidden; } /* TEMP DEBUG: hot pink */
     html.pwa-mode .hero-inner { position: absolute; inset: 0; display: block; padding: 0; max-width: none; }
     html.pwa-mode .hero-text { display: none !important; }
     html.pwa-mode .hero-phone { position: absolute; inset: 0; width: auto; height: auto; }
@@ -203,6 +203,7 @@
     html.pwa-mode .phone-home-btn { display: none !important; }
     html.pwa-mode .app-screen {
       position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; border: none;
+      background: #00e5ff !important; /* TEMP DEBUG: cyan */
     }
 
     /* ── HOW IT WORKS ── */
