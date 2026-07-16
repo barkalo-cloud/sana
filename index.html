@@ -186,19 +186,23 @@
       height: 100%; height: 100dvh; overflow: hidden; position: fixed; inset: 0; width: 100%;
       background: #080d1a;
     }
-    html.pwa-mode .hero { display: block; height: 100vh; height: 100dvh; padding: 0; background: #080d1a; overflow: hidden; }
-    html.pwa-mode .hero-inner { display: block; padding: 0; max-width: none; height: 100%; }
+    /* .hero is the single source of truth for the viewport box; every
+       descendant below just overlays it exactly via inset:0, instead of
+       each independently computing 100dvh (which can drift/round
+       differently at each nesting level and leave a gap at the bottom). */
+    html.pwa-mode .hero { position: relative; display: block; height: 100dvh; padding: 0; background: #080d1a; overflow: hidden; }
+    html.pwa-mode .hero-inner { position: absolute; inset: 0; display: block; padding: 0; max-width: none; }
     html.pwa-mode .hero-text { display: none !important; }
-    html.pwa-mode .hero-phone { width: 100vw; height: 100vh; height: 100dvh; }
+    html.pwa-mode .hero-phone { position: absolute; inset: 0; width: auto; height: auto; }
     html.pwa-mode .phone-frame {
-      width: 100vw; height: 100vh; height: 100dvh; max-width: none;
+      position: absolute; inset: 0; width: auto; height: auto; max-width: none;
       border-radius: 0; padding: 0; margin: 0; box-shadow: none; animation: none;
     }
     html.pwa-mode .phone-notch,
     html.pwa-mode .status-bar,
     html.pwa-mode .phone-home-btn { display: none !important; }
     html.pwa-mode .app-screen {
-      border-radius: 0; border: none; height: 100vh; height: 100dvh; width: 100vw;
+      position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; border: none;
     }
 
     /* ── HOW IT WORKS ── */
