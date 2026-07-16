@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Sana — Your daily performance OS</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#030712">
@@ -183,14 +183,14 @@
        Only the app's own internal flex regions (overflowY:auto) scroll,
        so fixed footers/continue-buttons can't get pushed off-screen. */
     html.pwa-mode, html.pwa-mode body {
-      height: 100%; height: 100dvh; overflow: hidden; position: fixed; inset: 0; width: 100%;
-      background: #080d1a;
+      height: 100%; overflow: hidden; background: #080d1a;
     }
-    /* .hero is the single source of truth for the viewport box; every
-       descendant below just overlays it exactly via inset:0, instead of
-       each independently computing 100dvh (which can drift/round
-       differently at each nesting level and leave a gap at the bottom). */
-    html.pwa-mode .hero { position: relative; display: block; height: 100dvh; padding: 0; background: #080d1a; overflow: hidden; }
+    /* .hero is position:fixed + inset:0 directly (not height:100dvh nested
+       inside another fixed ancestor) — this pins it to the true visual
+       viewport regardless of dvh-in-fixed-context rounding quirks. Every
+       descendant below just overlays it exactly via inset:0 too, instead
+       of each independently computing its own height. */
+    html.pwa-mode .hero { position: fixed; inset: 0; display: block; padding: 0; background: #080d1a; overflow: hidden; }
     html.pwa-mode .hero-inner { position: absolute; inset: 0; display: block; padding: 0; max-width: none; }
     html.pwa-mode .hero-text { display: none !important; }
     html.pwa-mode .hero-phone { position: absolute; inset: 0; width: auto; height: auto; }
@@ -920,7 +920,7 @@
         <a class="mini-card" href="#how-it-reads">
           <div class="mini-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
           <div class="mini-card-title">How it Reads</div>
-          <div class="mini-card-desc">The six daily signals Sana weighs, how wearable data layers in, and the priority hierarchy.</div>
+          <div class="mini-card-desc">The six daily signals Sana weighs each morning, and the priority hierarchy behind your plan.</div>
           <span class="mini-card-link">See the signals →</span>
         </a>
         <a class="mini-card" href="#references">
@@ -994,21 +994,13 @@
           <div class="bento-card-body">Six questions. That's all. Your full daily plan — training, food, supplements, sleep — updates instantly.</div>
         </div>
 
-        <!-- Wide card: wearable integration -->
+        <!-- Wide card: progress tracking -->
         <div class="bento-card span-8 reveal">
           <div class="bento-glow" style="width:320px;height:180px;background:rgba(244,114,182,0.05);bottom:-30px;right:-30px;"></div>
           <div class="bento-accent-bar" style="background:linear-gradient(90deg,#f472b6,#a78bfa);"></div>
-          <div class="bento-card-label">Wearable Integration</div>
-          <div class="bento-card-title">Works with your data — or without it</div>
-          <div class="bento-card-body">Connect Apple Watch, Oura Ring, Whoop, Garmin, Google Fit, or Fitbit for objective HRV and readiness data as a second layer of truth. Or just use the check-in — it works great on its own.</div>
-          <div style="display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;align-items:center;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="Apple Watch"><circle cx="12" cy="12" r="6"/><polyline points="12 10 12 12 13 13"/><path d="M16.13 7.66l-.81-4.05a2 2 0 00-2-1.61h-2.68a2 2 0 00-2 1.61l-.78 3.96"/><path d="M7.88 16.36l.8 4a2 2 0 002 1.61h2.72a2 2 0 002-1.61l.81-4.05"/></svg>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="Oura Ring"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="Whoop"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="Garmin"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="Fitbit"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            <span style="font-size:11px;color:#4b6280;margin-left:4px;">+ no device? Works just as well with check-in only</span>
-          </div>
+          <div class="bento-card-label">Progress Tracking</div>
+          <div class="bento-card-title">See your consistency, not just today</div>
+          <div class="bento-card-body">A calendar view of every day you've checked in, color-coded by how complete your plan was. Streaks build automatically from your own history — no extra hardware required.</div>
         </div>
 
         <!-- Narrow card: download/email plan -->
@@ -1149,9 +1141,8 @@
           <h2 class="col-title">Six signals. One clear picture.</h2>
           <div class="divider"></div>
           <div class="col-body">
-            <p>Sana weighs six subjective signals from your daily check-in. If you've connected a wearable, objective HRV, sleep staging, and readiness scores layer in as a second source of truth.</p>
-            <p>When signals conflict — say your wearable says high readiness but you rated energy at 2 — Sana errs on the side of caution. The conservative path protects long-term adaptation.</p>
-            <p>Supported wearables: Apple Watch, Oura Ring, Whoop, Garmin, Google Fit, Fitbit. No device? The check-in alone works great.</p>
+            <p>Sana weighs six subjective signals from your daily check-in — energy, stress, soreness, sleep, social recovery, and mood.</p>
+            <p>When signals conflict — say your energy is high but soreness is significant — Sana errs on the side of caution. The conservative path protects long-term adaptation.</p>
           </div>
         </div>
         <div>
@@ -1645,17 +1636,6 @@
       );
     }
 
-    /* ─── WEARABLES ──────────────────────────────────────────────── */
-    const WEARABLES = [
-      { id:"apple_watch", name:"Apple Watch", icon:"watch",      desc:"Heart rate, HRV, sleep, activity rings",         status:"Popular",          metrics:["HRV","Sleep","Heart rate","Steps","Active calories"] },
-      { id:"oura",        name:"Oura Ring",   icon:"ring",       desc:"Sleep stages, HRV, readiness score, temperature",status:"Best sleep data",   metrics:["HRV","Sleep stages","Readiness","Temperature","SpO2"] },
-      { id:"whoop",       name:"Whoop",       icon:"activity",   desc:"Recovery score, strain, HRV, sleep coach",       status:"Best recovery",    metrics:["Recovery score","Strain","HRV","Sleep coach","Respiratory rate"] },
-      { id:"garmin",      name:"Garmin",      icon:"navigation", desc:"Body battery, stress, VO2 max, sleep",           status:"Best for athletes",metrics:["Body battery","VO2 max","HRV","Stress","Sleep"] },
-      { id:"google_fit",  name:"Google Fit",  icon:"smartphone", desc:"Steps, heart rate, sleep via Android",           status:"Android",          metrics:["Steps","Heart rate","Sleep","Calories"] },
-      { id:"fitbit",      name:"Fitbit",      icon:"heart",      desc:"Sleep score, HRV, stress management",            status:"Beginner-friendly",metrics:["Sleep score","HRV","Stress","Steps","Calories"] },
-      { id:"manual",      name:"No device",   icon:"edit",       desc:"Use daily check-in answers only — works great",  status:"Default",          metrics:["Energy","Stress","Soreness","Sleep hrs","Mood"] },
-    ];
-
     /* ─── EXERCISE SWAP MAP ─────────────────────────────────────── */
     const SWAP_OPTIONS = {
       /* Push */
@@ -2012,7 +1992,7 @@
     };
 
     /* ─── PLAN BUILDER ───────────────────────────────────────────── */
-    function buildDailyPlans(ans, profile, wearable, swaps={}) {
+    function buildDailyPlans(ans, profile, swaps={}) {
       const { energy, stress, soreness, sleep_hrs } = ans;
       const f    = profile.sex === "Female";
       const goal = profile.goal || "lean_bulk";
@@ -2040,8 +2020,6 @@
       const lowR = energy <= 2 || soreness >= 4 || sleep_hrs < 6;
       const hiS  = stress >= 4;
       const great= energy >= 4 && soreness <= 2 && sleep_hrs >= 7.5;
-      const hasHRV = wearable && wearable !== "manual";
-      const wName  = hasHRV ? WEARABLES.find(w=>w.id===wearable)?.name : null;
 
       const applySwap = (ex, idx) => swaps[`train_${idx}`] ? {...ex, name:swaps[`train_${idx}`], swapped:true} : ex;
 
@@ -2326,9 +2304,9 @@
 
       const trainSession = lowR&&hiS?"Active Recovery":lowR?`Light · ${dayLabel}`:great?`Green · ${dayLabel}`:dayLabel;
       const trainNote = lowR&&hiS
-        ?`Session swapped to active recovery. ${wName?`Your ${wName} HRV confirms your nervous system is under load.`:"Energy and stress signals indicate your nervous system is under load."} Rest now, stronger tomorrow.`
+        ?`Session swapped to active recovery. Energy and stress signals indicate your nervous system is under load. Rest now, stronger tomorrow.`
         :lowR?`Intensity reduced — light ${dayLabel.toLowerCase()} day. Loads dialed back but you're still training.`
-        :great?`Green day — ${dayLabel} at full intensity. ${wName?`${wName} confirms strong recovery.`:"All signals aligned."} This is when progress happens fastest.`
+        :great?`Green day — ${dayLabel} at full intensity. All signals aligned. This is when progress happens fastest.`
         :`${dayLabel} session — adjust weight based on how the warm-up feels.`;
 
       const calToday  = hiS ? Math.round(cal*0.97) : cal;
@@ -2780,69 +2758,6 @@
       );
     }
 
-    /* ─── WEARABLE SCREEN ───────────────────────────────────────── */
-    function WearableScreen({connected, onConnect, onBack}) {
-      const T = React.useContext(ThemeCtx);
-      const [connecting, setConnecting] = useState(null);
-      const [justConnected, setJustConnected] = useState(null);
-      const connect = id => {
-        setConnecting(id);
-        setTimeout(()=>{setConnecting(null);setJustConnected(id);setTimeout(()=>onConnect(id),1200);},1800);
-      };
-      return (
-        <div style={{background:T.bg,minHeight:720,paddingBottom:24}}>
-          <div style={{padding:"20px 20px 14px",borderBottom:`0.5px solid ${T.border}`}}>
-            <button onClick={onBack} style={{fontSize:12,color:T.text2,background:"none",border:"none",cursor:"pointer",padding:0,marginBottom:10,display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:14}}>←</span> Back</button>
-            <div style={{fontSize:9,fontWeight:500,color:T.accent,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}}>Wearable sync</div>
-            <div style={{fontSize:20,fontWeight:500,color:T.text,letterSpacing:"-0.3px"}}>Connect your device</div>
-            <div style={{fontSize:12,color:T.text2,marginTop:3,lineHeight:1.6}}>Sana reads HRV, sleep stages, and recovery data to adapt your plan automatically — before you even open the app.</div>
-          </div>
-          <div style={{padding:"14px 20px"}}>
-            {connected&&connected!=="manual"&&(
-              <div style={{background:T.greenBg,border:`0.5px solid ${T.greenBd}`,borderRadius:T.r12,padding:"12px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
-                <SvgIcon name={WEARABLES.find(w=>w.id===connected)?.icon||"watch"} size={20} color={T.green}/>
-                <div>
-                  <div style={{fontSize:13,fontWeight:500,color:T.green}}>Connected — {WEARABLES.find(w=>w.id===connected)?.name}</div>
-                  <div style={{fontSize:11,color:T.text2,marginTop:1}}>Syncing {WEARABLES.find(w=>w.id===connected)?.metrics?.slice(0,3).join(", ")}</div>
-                </div>
-              </div>
-            )}
-            <div style={{padding:"10px 13px",background:T.blueSoft,border:`0.5px solid ${T.border2}`,borderRadius:T.r12,marginBottom:14}}>
-              <div style={{fontSize:11,fontWeight:500,color:T.accent,marginBottom:4}}>What Sana does with your data</div>
-              <div style={{fontSize:11,color:T.text2,lineHeight:1.6}}>When HRV drops 10%+ below your baseline, Sana quietly swaps your strength session for recovery before you open the app. Sleep stages inform your energy targets. Temperature trends flag illness before symptoms appear.</div>
-            </div>
-            {WEARABLES.map(w=>{
-              const isCon=connected===w.id, isCing=connecting===w.id, wasJust=justConnected===w.id;
-              return(
-                <div key={w.id} style={{background:isCon?T.greenBg:T.card,border:`0.5px solid ${isCon?T.greenBd:T.border}`,borderRadius:T.r14,padding:"14px 15px",marginBottom:8}}>
-                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-                    <div style={{width:36,display:"flex",justifyContent:"center",flexShrink:0}}><SvgIcon name={w.icon} size={22} color={T.text2}/></div>
-                    <div style={{flex:1}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:3}}>
-                        <div style={{fontSize:13,fontWeight:500,color:isCon?T.green:T.text}}>{w.name}</div>
-                        <Pill label={isCon?"Connected ✓":w.status} bg={isCon?T.greenBg:`${T.accent}15`} color={isCon?T.green:T.accent}/>
-                      </div>
-                      <div style={{fontSize:11,color:T.text2,marginBottom:8,lineHeight:1.45}}>{w.desc}</div>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:10}}>
-                        {w.metrics.map(m=><span key={m} style={{fontSize:9,padding:"2px 7px",borderRadius:T.r99,background:`${T.accent}12`,color:T.accent,border:`0.5px solid ${T.border2}`}}>{m}</span>)}
-                      </div>
-                      {w.id!=="manual"?(
-                        <button onClick={()=>!isCon&&!isCing&&connect(w.id)} style={{padding:"8px 14px",fontSize:12,fontWeight:500,borderRadius:T.r12,background:isCon?"transparent":isCing?T.blueSoft:T.blue,color:isCon?T.green:T.text,border:isCon?`0.5px solid ${T.greenBd}`:"none",cursor:isCon?"default":"pointer",minWidth:100}}>
-                          {isCon?"Connected ✓":isCing?"Connecting...":wasJust?"Connected!":"Connect"}
-                        </button>
-                      ):(
-                        <div style={{fontSize:11,color:T.text3}}>Active by default · check-in data only</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-
     /* ─── POST CHECK-IN PLAN ────────────────────────────────────── */
     function PillarModal({icon, label, accent, badge, onClose, children}) {
       const T = React.useContext(ThemeCtx);
@@ -2915,7 +2830,7 @@
       );
     }
 
-    function PostCheckinPlan({checkinAns, userProfile, wearable, plans, checkedItems, onCheck, swaps, onSwap, onDone, onStartWorkout, workoutStarted, todayWorkout}) {
+    function PostCheckinPlan({checkinAns, userProfile, plans, checkedItems, onCheck, swaps, onSwap, onDone, onStartWorkout, workoutStarted, todayWorkout}) {
       const T = React.useContext(ThemeCtx);
       const [activePillar, setActivePillar] = useState(null);
       const [reviewOpen,   setReviewOpen]   = useState(false);
@@ -2992,7 +2907,6 @@
               <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
                 <div style={{width:8,height:8,borderRadius:"50%",background:sc.dot}}/>
                 <Pill label={sc.label} bg={`${sc.dot}20`} color={sc.dot}/>
-                {wearable&&wearable!=="manual"&&<Pill label={`via ${WEARABLES.find(w=>w.id===wearable)?.name}`} bg={T.blueSoft} color={T.accent}/>}
               </div>
               <div style={{fontSize:14,fontWeight:500,color:T.text,lineHeight:1.4,marginBottom:5}}>{bodySignal}</div>
               <div style={{fontSize:12,color:T.text2,lineHeight:1.6}}>{moodMsg}</div>
@@ -3368,7 +3282,7 @@
     }
 
     /* ─── CHECK-IN FLOW ─────────────────────────────────────────── */
-    function CheckInFlow({userProfile, wearable, onComplete, onBack}) {
+    function CheckInFlow({userProfile, onComplete, onBack}) {
       const T = React.useContext(ThemeCtx);
       const [step, setStep] = useState(0);
       const [ans,  setAns]  = useState({});
@@ -3402,12 +3316,6 @@
             {step>0?<button onClick={()=>setStep(s=>s-1)} style={{fontSize:12,color:T.text2,background:"none",border:"none",cursor:"pointer"}}>← Back</button>
                    :<button onClick={onBack} style={{fontSize:12,color:T.text2,background:"none",border:"none",cursor:"pointer"}}>Cancel</button>}
           </div>
-          {wearable&&wearable!=="manual"&&(
-            <div style={{margin:"10px 20px 0",padding:"8px 12px",background:T.blueSoft,border:`0.5px solid ${T.border2}`,borderRadius:T.r8,display:"flex",alignItems:"center",gap:8}}>
-              <SvgIcon name={WEARABLES.find(w=>w.id===wearable)?.icon||"smartphone"} size={14} color={T.text2}/>
-              <div style={{fontSize:11,color:T.accent}}>{WEARABLES.find(w=>w.id===wearable)?.name} data is being read alongside your answers</div>
-            </div>
-          )}
           <div style={{padding:"16px 20px"}}>
             <div style={{position:"relative",marginLeft:38,marginBottom:16}}>
               <div style={{position:"absolute",left:-38,top:0,width:28,height:28,borderRadius:"50%",background:`linear-gradient(135deg,${T.blueMid},${T.indigo})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:600,color:"#fff"}}>S</div>
@@ -5016,7 +4924,7 @@ BEHAVIOUR:
     }
 
     /* ─── PROFILE SCREEN ─────────────────────────────────────────── */
-    function ProfileScreen({ profile, onSave }) {
+    function ProfileScreen({ profile, onSave, onSignOut }) {
       const T           = React.useContext(ThemeCtx);
       const toggleTheme = React.useContext(SetThemeCtx);
       const isLight     = T === D_LIGHT;
@@ -5265,6 +5173,13 @@ BEHAVIOUR:
                 </div>
               </div>
             </div>
+
+            {/* Sign out */}
+            <div
+              onClick={() => { if (window.confirm("Sign out and start over? Your profile and today's check-in will be cleared. Workout history is kept.")) onSignOut(); }}
+              style={{background:T.card,border:`0.5px solid ${T.border}`,borderRadius:T.r14,padding:"14px",textAlign:"center",cursor:"pointer",marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:600,color:T.red||"#ef4444"}}>Sign out</div>
+            </div>
           </div>
 
           {renderSheet()}
@@ -5279,18 +5194,7 @@ BEHAVIOUR:
       const todayStr = today.toISOString().split("T")[0];
 
       const [history, setHistory] = useState(() => {
-        const stored = localStorage.getItem("sana_history");
-        if (stored) return JSON.parse(stored);
-        /* Seed demo data so the calendar looks populated on first load */
-        const demo = {};
-        const pcts = [100,88,74,92,63,100,85,78,91,100,82,69,95,88,76,100,84,72,90,87];
-        pcts.forEach((p, i) => {
-          const d = new Date(today);
-          d.setDate(today.getDate() - (i + 1));
-          demo[d.toISOString().split("T")[0]] = { pct: p };
-        });
-        localStorage.setItem("sana_history", JSON.stringify(demo));
-        return demo;
+        try { return JSON.parse(localStorage.getItem("sana_history") || "{}"); } catch { return {}; }
       });
 
       /* Save today's completion whenever it changes */
@@ -5962,7 +5866,6 @@ BEHAVIOUR:
 
       const [screen,       setScreen]       = useState("home");
       const [tab,          setTab]          = useState("home");
-      const [wearable,     setWearable]     = useState(() => localStorage.getItem("sana_wearable") || "manual");
       const [checkinAns,   setCheckinAns]   = useState(() => savedToday?.checkinAns ?? null);
       const [checkedItems, setCheckedItems] = useState(() => savedToday?.checkedItems ?? {});
       const [userProfile,  setUserProfile]  = useState(() => {
@@ -5986,10 +5889,6 @@ BEHAVIOUR:
       useEffect(() => {
         if (userProfile) localStorage.setItem("sana_profile", JSON.stringify(userProfile));
       }, [userProfile]);
-
-      useEffect(() => {
-        localStorage.setItem("sana_wearable", wearable);
-      }, [wearable]);
 
       useEffect(() => {
         localStorage.setItem("sana_today", JSON.stringify({ date: todayKey(), checkinAns, checkedItems, swaps }));
@@ -6017,7 +5916,7 @@ BEHAVIOUR:
       }
 
       /* userProfile is guaranteed non-null beyond this point */
-      const plans       = checkinAns ? buildDailyPlans(checkinAns, userProfile, wearable, swaps) : null;
+      const plans       = checkinAns ? buildDailyPlans(checkinAns, userProfile, swaps) : null;
       const checkinDone = !!checkinAns;
 
       const handleCheck = (key, val) => setCheckedItems(prev => ({...prev, [key]: val}));
@@ -6159,40 +6058,35 @@ BEHAVIOUR:
         <SetThemeCtx.Provider value={toggleTheme}>
         <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)"}}>
 
-          {/* ── WEARABLE sub-screen ── */}
-          {screen==="wearable"&&(
-            <div style={{flex:1,overflowY:"auto"}}>
-              <WearableScreen connected={wearable} onConnect={id=>{setWearable(id);setScreen("home");}} onBack={()=>setScreen("home")}/>
-            </div>
-          )}
-
           {/* ── CHAT ── */}
-          {tab==="chat"&&screen!=="wearable"&&(
+          {tab==="chat"&&(
             <div style={{flex:1,overflowY:"auto"}}><ChatScreen plans={plans} checkinAns={checkinAns} overallPct={overallPct||0} profile={userProfile} onBack={()=>navigate("home")}/></div>
           )}
 
           {/* ── PROFILE ── */}
-          {tab==="profile"&&screen!=="wearable"&&(
-            <div style={{flex:1,overflowY:"auto"}}><ProfileScreen profile={userProfile} onSave={p=>setUserProfile(p)} onBack={()=>navigate("home")}/></div>
+          {tab==="profile"&&(
+            <div style={{flex:1,overflowY:"auto"}}><ProfileScreen profile={userProfile} onSave={p=>setUserProfile(p)} onBack={()=>navigate("home")} onSignOut={()=>{
+              localStorage.removeItem("sana_profile");
+              localStorage.removeItem("sana_today");
+              setUserProfile(null);
+              setCheckinAns(null);
+              setCheckedItems({});
+              setSwaps({});
+              navigate("home");
+            }}/></div>
           )}
 
           {/* ── TRACKER ── */}
-          {tab==="tracker"&&screen!=="wearable"&&(
+          {tab==="tracker"&&(
             <div style={{flex:1,overflowY:"auto"}}><TrackerScreen overallPct={overallPct} checkinDone={checkinDone}/></div>
           )}
 
           {/* ── DASHBOARD ── */}
-          {tab==="home"&&screen!=="wearable"&&(
+          {tab==="home"&&(
             <div style={{flex:1,overflowY:"auto",padding:"24px 20px 28px"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
-                <div>
-                  <div style={{fontSize:11,color:T.text3,marginBottom:3}}>{new Date().toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"})}</div>
-                  <div style={{fontSize:22,fontWeight:500,color:T.text,letterSpacing:"-0.4px",lineHeight:1.15}}>{getGreeting()},<br/>{userProfile.name}.</div>
-                </div>
-                <button onClick={()=>{setScreen("wearable");}} style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:T.card,border:`0.5px solid ${wearable!=="manual"?T.greenBd:T.border2}`,borderRadius:T.r99,cursor:"pointer",fontSize:11,fontWeight:500,color:wearable!=="manual"?T.green:T.text2}}>
-                  <SvgIcon name={WEARABLES.find(w=>w.id===wearable)?.icon||"smartphone"} size={14} color={wearable!=="manual"?T.green:T.text2}/>
-                  {wearable==="manual"?"Sync device":WEARABLES.find(w=>w.id===wearable)?.name}
-                </button>
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:11,color:T.text3,marginBottom:3}}>{new Date().toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"})}</div>
+                <div style={{fontSize:22,fontWeight:500,color:T.text,letterSpacing:"-0.4px",lineHeight:1.15}}>{getGreeting()},<br/>{userProfile.name}.</div>
               </div>
 
               {/* Overall progress ring / bar */}
@@ -6293,7 +6187,6 @@ BEHAVIOUR:
             <div style={{flex:1,overflowY:"auto"}}>
               <CheckInFlow
                 userProfile={userProfile}
-                wearable={wearable}
                 onComplete={handleCheckinComplete}
                 onBack={()=>navigate("home")}
               />
@@ -6308,13 +6201,12 @@ BEHAVIOUR:
           )}
 
           {/* ── PLAN ── */}
-          {tab==="plan"&&screen!=="wearable"&&(
+          {tab==="plan"&&(
             <div style={{flex:1,overflowY:"auto"}}>
               {plans ? (
                 <PostCheckinPlan
                   checkinAns={checkinAns}
                   userProfile={userProfile}
-                  wearable={wearable}
                   plans={plans}
                   checkedItems={checkedItems}
                   onCheck={handleCheck}
