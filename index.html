@@ -5936,13 +5936,23 @@ BEHAVIOUR:
     /* ─── ROOT ──────────────────────────────────────────────────── */
     function SanaCheckInV2() {
       /* All hooks MUST be called before any conditional return */
+      const todayKey = () => new Date().toDateString();
+      const savedToday = (() => {
+        try {
+          const s = JSON.parse(localStorage.getItem("sana_today") || "null");
+          return s && s.date === todayKey() ? s : null;
+        } catch { return null; }
+      })();
+
       const [screen,       setScreen]       = useState("home");
       const [tab,          setTab]          = useState("home");
-      const [wearable,     setWearable]     = useState("manual");
-      const [checkinAns,   setCheckinAns]   = useState(null);
-      const [checkedItems, setCheckedItems] = useState({});
-      const [userProfile,  setUserProfile]  = useState(null);
-      const [swaps,        setSwaps]        = useState({});
+      const [wearable,     setWearable]     = useState(() => localStorage.getItem("sana_wearable") || "manual");
+      const [checkinAns,   setCheckinAns]   = useState(() => savedToday?.checkinAns ?? null);
+      const [checkedItems, setCheckedItems] = useState(() => savedToday?.checkedItems ?? {});
+      const [userProfile,  setUserProfile]  = useState(() => {
+        try { return JSON.parse(localStorage.getItem("sana_profile") || "null"); } catch { return null; }
+      });
+      const [swaps,        setSwaps]        = useState(() => savedToday?.swaps ?? {});
       const [setupLoading, setSetupLoading] = useState(false);
       const [pendingProfile, setPendingProfile] = useState(null);
       const [lightMode,    setLightMode]    = useState(()=>localStorage.getItem("sana_theme")==="light");
@@ -5956,6 +5966,18 @@ BEHAVIOUR:
         localStorage.setItem("sana_theme", n ? "light" : "dark");
         setLightMode(n);
       };
+
+      useEffect(() => {
+        if (userProfile) localStorage.setItem("sana_profile", JSON.stringify(userProfile));
+      }, [userProfile]);
+
+      useEffect(() => {
+        localStorage.setItem("sana_wearable", wearable);
+      }, [wearable]);
+
+      useEffect(() => {
+        localStorage.setItem("sana_today", JSON.stringify({ date: todayKey(), checkinAns, checkedItems, swaps }));
+      }, [checkinAns, checkedItems, swaps]);
 
       /* ── First-launch guard ── render setup before any userProfile access ── */
       if (!userProfile) {
