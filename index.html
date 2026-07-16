@@ -3779,11 +3779,11 @@
       const T = React.useContext(ThemeCtx);
       const [step, setStep] = useState(-1);
       const [form, setForm] = useState({
-        name:"", sex:"Male", age:"", bodyType:"mesomorph",
+        name:"", sex:"", age:"", bodyType:"",
         weight:"", weightUnit:"lbs",
         heightFt:"", heightIn:"", height:"", heightUnit:"ft",
-        lifestyleLevel:"moderate", daysPerWeek:"3", dietStyle:"omnivore", lifeContext:"balanced",
-        goal:"lean_bulk", level:"intermediate", equipment:[], activityType:[], supplements:[]
+        lifestyleLevel:"", daysPerWeek:"", dietStyle:"", lifeContext:"",
+        goal:"", level:"", equipment:[], activityType:[], supplements:[]
       });
       const set         = (k,v) => setForm(p=>({...p,[k]:v}));
       const toggleEq    = v => setForm(p=>({...p,equipment:p.equipment.includes(v)?p.equipment.filter(e=>e!==v):[...p.equipment,v]}));
@@ -3905,19 +3905,19 @@
 
       const canNext = [
         form.name.trim().length > 0,         // 0: name
-        true,                                 // 1: sex (auto-advance)
+        !!form.sex,                          // 1: sex
         form.age && +form.age > 0,           // 2: age
         !!form.bodyType,                      // 3: body type
         form.weight && +form.weight > 0,     // 4: weight
         form.heightUnit === "ft" ? (form.heightFt && +form.heightFt > 0) : (form.height && +form.height > 0), // 5: height
-        true,                                 // 6: lifestyle level (auto-advance)
-        true,                                 // 7: goal (auto-advance)
-        true,                                 // 8: days per week (auto-advance)
-        true,                                 // 9: level (auto-advance)
+        !!form.lifestyleLevel,                // 6: lifestyle level
+        !!form.goal,                           // 7: goal
+        !!form.daysPerWeek,                    // 8: days per week
+        !!form.level,                          // 9: level
         form.equipment.length > 0,           // 10: equipment
         form.activityType.length > 0,        // 11: activity (multi-select)
-        true,                                 // 12: diet style (auto-advance)
-        true,                                 // 13: life context (auto-advance)
+        !!form.dietStyle,                      // 12: diet style
+        !!form.lifeContext,                    // 13: life context
         true,                                 // 14: supplements (optional, always can skip)
         true,                                 // 15: summary
         true,                                 // 16: plan delivery
@@ -4027,7 +4027,7 @@
             <div style={{fontSize:13,color:T.text2,marginBottom:20}}>Used to calculate your calorie and hormone baselines.</div>
             <div style={{display:"flex",gap:10}}>
               {["Male","Female"].map(sx=>(
-                <div key={sx} onClick={()=>{set("sex",sx);setStep(2);}} style={{...gridCard(form.sex===sx),flex:1,textAlign:"center"}}>
+                <div key={sx} onClick={()=>set("sex",sx)} style={{...gridCard(form.sex===sx),flex:1,textAlign:"center"}}>
                   <div style={{fontSize:28,marginBottom:8}}>{sx==="Male"?"♂":"♀"}</div>
                   <div style={{fontSize:14,fontWeight:500,color:form.sex===sx?T.accent:T.text}}>{sx}</div>
                 </div>
@@ -4127,7 +4127,7 @@
               <div style={{fontSize:13,color:T.text2,marginBottom:18}}>Outside of workouts — how active is your typical day? This changes your total calorie need significantly.</div>
               <div style={{display:"flex",flexDirection:"column",gap:9}}>
                 {LIFESTYLE.map(l=>(
-                  <div key={l.v} onClick={()=>{set("lifestyleLevel",l.v);setStep(7);}}
+                  <div key={l.v} onClick={()=>set("lifestyleLevel",l.v)}
                     style={{...gridCard(form.lifestyleLevel===l.v),display:"flex",alignItems:"center",gap:14,padding:"14px"}}>
                     <SvgIcon name={l.icon} size={22} color={form.lifestyleLevel===l.v?T.accent:T.text2} style={{flexShrink:0}}/>
                     <div style={{flex:1}}>
@@ -4147,7 +4147,7 @@
             <div style={{fontSize:12,color:T.text2,marginBottom:16}}>Drives your calorie target, protein ratio, and training intensity — everything Sana builds around this.</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
               {GOALS.map(g=>{const sel=form.goal===g.v; return(
-                <div key={g.v} onClick={()=>{set("goal",g.v);setStep(8);}} style={{...gridCard(sel),padding:"13px 12px"}}>
+                <div key={g.v} onClick={()=>set("goal",g.v)} style={{...gridCard(sel),padding:"13px 12px"}}>
                   <div style={{marginBottom:6}}><SvgIcon name={g.icon} size={20} color={sel?T.accent:T.text3}/></div>
                   <div style={{fontSize:13,fontWeight:700,color:sel?"#a5b4fc":T.text,marginBottom:3}}>{g.label}</div>
                   <div style={{fontSize:10,color:T.text2,lineHeight:1.4,marginBottom:sel?6:0}}>{g.sub}</div>
@@ -4171,7 +4171,7 @@
               <div style={{fontSize:13,color:T.text2,marginBottom:18}}>How many days per week can you realistically train?</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
                 {DAYS.map(d=>(
-                  <div key={d.v} onClick={()=>{set("daysPerWeek",d.v);setStep(9);}}
+                  <div key={d.v} onClick={()=>set("daysPerWeek",d.v)}
                     style={{...gridCard(form.daysPerWeek===d.v),padding:"16px 14px"}}>
                     <div style={{fontSize:26,fontWeight:600,color:form.daysPerWeek===d.v?T.accent:T.text,marginBottom:5}}>{d.label}</div>
                     <div style={{fontSize:11,color:T.text2,lineHeight:1.4}}>{d.sub}</div>
@@ -4187,7 +4187,7 @@
             <div style={{fontSize:12,color:T.text2,marginBottom:16}}>Determines workout volume, exercise complexity, and progression speed. Honest answer = better plan.</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
               {LEVELS.map(l=>{const sel=form.level===l.v; return(
-                <div key={l.v} onClick={()=>{set("level",l.v);setStep(10);}} style={{...gridCard(sel),padding:"14px 12px"}}>
+                <div key={l.v} onClick={()=>set("level",l.v)} style={{...gridCard(sel),padding:"14px 12px"}}>
                   <div style={{marginBottom:6}}><SvgIcon name={l.icon} size={22} color={sel?"#a5b4fc":T.text3}/></div>
                   <div style={{fontSize:13,fontWeight:700,color:sel?"#a5b4fc":T.text,marginBottom:2}}>{l.label}</div>
                   <div style={{fontSize:10,color:T.text3,marginBottom:sel?6:0,fontWeight:500}}>{l.sub}</div>
@@ -4248,7 +4248,7 @@
               <div style={{fontSize:12,color:T.text2,marginBottom:16}}>Personalises your meal recommendations, supplement flags, and macro split. Sana adapts nutrition around your eating style.</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
                 {DIETS.map(d=>{const sel=form.dietStyle===d.v; return(
-                  <div key={d.v} onClick={()=>{set("dietStyle",d.v);setStep(13);}} style={{...gridCard(sel),padding:"13px 12px"}}>
+                  <div key={d.v} onClick={()=>set("dietStyle",d.v)} style={{...gridCard(sel),padding:"13px 12px"}}>
                     <div style={{marginBottom:5}}><SvgIcon name={d.icon} size={20} color={sel?T.accent:T.text3}/></div>
                     <div style={{fontSize:12,fontWeight:700,color:sel?"#a5b4fc":T.text,marginBottom:2}}>{d.label}</div>
                     <div style={{fontSize:10,color:T.text2,lineHeight:1.4,marginBottom:sel?6:0}}>{d.sub}</div>
@@ -4281,7 +4281,7 @@
               <div style={{fontSize:12,color:T.text2,marginBottom:16,lineHeight:1.5}}>Chronic stress is as important as training for body composition. Sana adjusts volume, intensity, and nutrition to your real-life recovery capacity.</div>
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {CONTEXTS.map(c=>{const sel=form.lifeContext===c.v; return(
-                  <div key={c.v} onClick={()=>{set("lifeContext",c.v);setStep(14);}}
+                  <div key={c.v} onClick={()=>set("lifeContext",c.v)}
                     style={{...gridCard(sel),padding:"14px"}}>
                     <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:sel?8:0}}>
                       <SvgIcon name={c.icon} size={22} color={sel?"#a5b4fc":T.text2} style={{flexShrink:0}}/>
@@ -4787,7 +4787,7 @@
           </div>
 
           {/* Continue button — hidden on welcome screen */}
-          {step >= 0 && [0,2,3,4,5,10,11,14].includes(step) && (
+          {step >= 0 && step <= 14 && (
             <div style={{padding:"0 20px 20px",flexShrink:0}}>
               <button onClick={()=>setStep(n=>n+1)} disabled={!canNext}
                 style={{width:"100%",padding:"14px",
