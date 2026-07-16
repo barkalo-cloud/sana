@@ -179,8 +179,14 @@
     html.pwa-mode footer.site-footer {
       display: none !important;
     }
-    html.pwa-mode .hero { display: block; min-height: 100vh; min-height: 100dvh; padding: 0; background: #080d1a; }
-    html.pwa-mode .hero-inner { display: block; padding: 0; max-width: none; }
+    /* Lock the whole page to the viewport — no outer-page scroll, ever.
+       Only the app's own internal flex regions (overflowY:auto) scroll,
+       so fixed footers/continue-buttons can't get pushed off-screen. */
+    html.pwa-mode, html.pwa-mode body {
+      height: 100%; height: 100dvh; overflow: hidden; position: fixed; inset: 0; width: 100%;
+    }
+    html.pwa-mode .hero { display: block; height: 100vh; height: 100dvh; padding: 0; background: #080d1a; overflow: hidden; }
+    html.pwa-mode .hero-inner { display: block; padding: 0; max-width: none; height: 100%; }
     html.pwa-mode .hero-text { display: none !important; }
     html.pwa-mode .hero-phone { width: 100vw; height: 100vh; height: 100dvh; }
     html.pwa-mode .phone-frame {
@@ -3752,9 +3758,9 @@
       const lifeMultiplier = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725}[form.lifestyleLevel] || 1.4;
       const tdee = Math.round(bmr * lifeMultiplier);
       const calAdj     = {lean_cut:-400, lean_bulk:200, bulk:500, maintain:0, cardio:0, wellness:-150, recomp:-100, sport:100}[form.goal] || 0;
-      const bodyAdj    = {ectomorph:175, mesomorph:0, endomorph:-175}[form.bodyType] || 0;
+      const bodyAdj    = {ectomorph:175, mesomorph:0, endomorph:-175, combination:-75}[form.bodyType] || 0;
       const protRat    = {lean_cut:2.4,  lean_bulk:2.0, bulk:1.8, maintain:1.6, cardio:1.4, wellness:1.2, recomp:2.2, sport:1.8}[form.goal] || 1.8;
-      const bodyProtAdj = {ectomorph:0, mesomorph:0, endomorph:0.1}[form.bodyType] || 0;
+      const bodyProtAdj = {ectomorph:0, mesomorph:0, endomorph:0.1, combination:0.05}[form.bodyType] || 0;
       const durMap     = {beginner:30, intermediate:45, advanced:55, elite:70};
       return {
         ...form,
@@ -3785,19 +3791,24 @@
       const [suppSearch,   setSuppSearch]   = useState("");
       const [suppExpanded, setSuppExpanded] = useState(null);
 
+      const BODY_TYPE_BADGE = "#818cf8";
       const BODY_TYPES = [
         {v:"ectomorph",  icon:"feather", label:"Naturally Lean",
           sub:"Slim frame · fast metabolism · hard to gain weight",
           detail:"Your metabolism burns ~200–300 more kcal at rest than average. Sana adds +175 kcal/day and prioritises calorie-dense meals & compound lifts to drive muscle growth.",
-          badge:"Fast metabolism",  badgeColor:"#38bdf8"},
+          badge:"Fast metabolism",  badgeColor:BODY_TYPE_BADGE},
         {v:"mesomorph",  icon:"zap", label:"Athletic Build",
           sub:"Balanced frame · gains muscle & loses fat with relative ease",
           detail:"You respond well to both hypertrophy and fat-loss phases. Sana uses balanced macros and standard progressive overload — your body recomps efficiently.",
-          badge:"Responds well to training", badgeColor:"#a78bfa"},
+          badge:"Responds well to training", badgeColor:BODY_TYPE_BADGE},
         {v:"endomorph",  icon:"mountain", label:"Broader Frame",
           sub:"Stockier build · insulin-sensitive · gains weight more easily",
           detail:"Your NEAT (non-exercise calorie burn) runs lower. Sana reduces calories by 175 kcal, raises protein to 2.5g/kg to protect muscle, and emphasises carb timing around workouts.",
-          badge:"Insulin-sensitive",  badgeColor:"#f59e0b"},
+          badge:"Insulin-sensitive",  badgeColor:BODY_TYPE_BADGE},
+        {v:"combination", icon:"sliders", label:"Combination",
+          sub:"Mixed traits · carries weight differently across the body",
+          detail:"You show traits from more than one type — often leaner limbs with a softer midsection. Sana blends the adjustments: a modest calorie reduction with slightly raised protein, then fine-tunes further from your daily check-ins.",
+          badge:"Blended traits",  badgeColor:BODY_TYPE_BADGE},
       ];
       const GOALS = [
         {v:"lean_cut",  icon:"flame", label:"Lean & Cut",
@@ -3895,7 +3906,7 @@
         form.name.trim().length > 0,         // 0: name
         true,                                 // 1: sex (auto-advance)
         form.age && +form.age > 0,           // 2: age
-        true,                                 // 3: body type (auto-advance)
+        !!form.bodyType,                      // 3: body type
         form.weight && +form.weight > 0,     // 4: weight
         form.heightUnit === "ft" ? (form.heightFt && +form.heightFt > 0) : (form.height && +form.height > 0), // 5: height
         true,                                 // 6: lifestyle level (auto-advance)
@@ -4038,7 +4049,7 @@
             <div style={{fontSize:12,color:T.text2,marginBottom:16,lineHeight:1.5}}>Your genetics shape how your body responds to food and training. This calibrates your calorie targets and protein ratios.</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {BODY_TYPES.map(bt=>{const sel=form.bodyType===bt.v; return(
-                <div key={bt.v} onClick={()=>{set("bodyType",bt.v);setStep(4);}}
+                <div key={bt.v} onClick={()=>set("bodyType",bt.v)}
                   style={{...gridCard(sel),padding:"14px"}}>
                   <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:sel?8:0}}>
                     <SvgIcon name={bt.icon} size={24} color={sel?"#a5b4fc":T.text2} style={{flexShrink:0}}/>
@@ -4775,7 +4786,7 @@
           </div>
 
           {/* Continue button — hidden on welcome screen */}
-          {step >= 0 && [0,2,4,5,10,11,14].includes(step) && (
+          {step >= 0 && [0,2,3,4,5,10,11,14].includes(step) && (
             <div style={{padding:"0 20px 20px",flexShrink:0}}>
               <button onClick={()=>setStep(n=>n+1)} disabled={!canNext}
                 style={{width:"100%",padding:"14px",
@@ -5019,7 +5030,7 @@ BEHAVIOUR:
       const goalLabels      = { lean_cut:"Lean & Cut", lean_bulk:"Gain Muscle", bulk:"Bulk Up", maintain:"Maintain", cardio:"Cardio Focus", wellness:"General Wellness", recomp:"Body Recomp", sport:"Sport & Performance" };
       const levelLabels     = { beginner:"Beginner", intermediate:"Intermediate", advanced:"Advanced", elite:"Elite" };
       const typeLabels      = { lifting:"Lifting", cardio:"Cardio", yoga:"Yoga", pilates:"Pilates", hiit:"HIIT", mixed:"Mixed" };
-      const bodyTypeLabels  = { ectomorph:"Naturally Lean", mesomorph:"Athletic Build", endomorph:"Broader Frame" };
+      const bodyTypeLabels  = { ectomorph:"Naturally Lean", mesomorph:"Athletic Build", endomorph:"Broader Frame", combination:"Combination" };
       const lifestyleLabels = { sedentary:"Desk / Sedentary", light:"Lightly Active", moderate:"Moderately Active", active:"Very Active" };
       const dietLabels      = { omnivore:"Omnivore", vegetarian:"Vegetarian", vegan:"Vegan", pescatarian:"Pescatarian", lowcarb:"Low-carb / Keto", flexible:"Flexible" };
       const contextLabels   = { balanced:"Life is balanced", demanding:"Work is demanding", transition:"In a transition", social:"Very active social life" };
@@ -5148,7 +5159,7 @@ BEHAVIOUR:
           </div>
         );
         else if (e==="age") content = (<><Inp value={draft.age} onChange={v=>set("age",v)} type="number" min="13" max="99" placeholder="Age"/><SaveBtn onClick={()=>commit({age:draft.age})}/></>);
-        else if (e==="bodyType") content = ["ectomorph","mesomorph","endomorph"].map(v=><Opt key={v} label={bodyTypeLabels[v]} selected={draft.bodyType===v} onPress={()=>commit({bodyType:v})}/>);
+        else if (e==="bodyType") content = ["ectomorph","mesomorph","endomorph","combination"].map(v=><Opt key={v} label={bodyTypeLabels[v]} selected={draft.bodyType===v} onPress={()=>commit({bodyType:v})}/>);
         else if (e==="weight") content = (<><UnitPicker options={["lbs","kg"]} active={draft.weightUnit} onChange={v=>set("weightUnit",v)}/><Inp value={draft.weight} onChange={v=>set("weight",v)} type="number" placeholder={`Weight in ${draft.weightUnit}`}/><SaveBtn onClick={()=>commit({weight:draft.weight,weightUnit:draft.weightUnit})}/></>);
         else if (e==="height") content = (
           <>
