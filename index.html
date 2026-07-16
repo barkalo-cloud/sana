@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Sana — Your daily performance OS</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#030712">
@@ -5982,12 +5982,12 @@ BEHAVIOUR:
       /* ── First-launch guard ── render setup before any userProfile access ── */
       if (!userProfile) {
         if (setupLoading) return (
-          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%"}}>
+          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
             <SetupLoadingScreen name={pendingProfile?.name}/>
           </div>
         );
         return (
-          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",overflowY:"auto"}}>
+          <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
             <SetupScreen onDone={p => {
               setPendingProfile(p);
               setSetupLoading(true);
@@ -6119,7 +6119,7 @@ BEHAVIOUR:
           {id:"profile", icon:I.profile, label:"Profile"},
         ];
         return (
-          <div style={{background:T.bg,borderTop:`0.5px solid ${T.border}`,display:"flex",zIndex:10,flexShrink:0}}>
+          <div style={{background:T.bg,borderTop:`0.5px solid ${T.border}`,display:"flex",zIndex:10,flexShrink:0,paddingBottom:"env(safe-area-inset-bottom)"}}>
             {tabs.map(t=>{
               const active = tab===t.id;
               const go = () => {
@@ -6141,7 +6141,7 @@ BEHAVIOUR:
       return (
         <ThemeCtx.Provider value={T}>
         <SetThemeCtx.Provider value={toggleTheme}>
-        <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",display:"flex",flexDirection:"column"}}>
+        <div style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",background:T.bg,WebkitFontSmoothing:"antialiased",height:"100%",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)"}}>
 
           {/* ── WEARABLE sub-screen ── */}
           {screen==="wearable"&&(
