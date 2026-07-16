@@ -39,12 +39,13 @@
     .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .logo-mark {
       width: 32px; height: 32px; border-radius: 9px;
-      background: linear-gradient(135deg, #2563eb, #6366f1);
+      background: linear-gradient(135deg, #34a06a, #2f8fd6);
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 800; color: #fff;
-      box-shadow: 0 0 20px rgba(99,102,241,0.5), 0 0 0 1px rgba(99,102,241,0.3);
+      box-shadow: 0 0 20px rgba(47,143,214,0.5), 0 0 0 1px rgba(47,143,214,0.3);
       letter-spacing: -0.5px;
     }
+    .logo-mark svg { width: 20px; height: 20px; display: block; }
     .logo-name { font-size: 19px; font-weight: 700; color: #f0f6ff; letter-spacing: -0.8px; }
     .nav-links { display: flex; align-items: center; gap: 36px; list-style: none; }
     .nav-links a { font-size: 13px; font-weight: 500; color: rgba(139,163,192,0.8); text-decoration: none; letter-spacing: 0.01em; transition: color 0.2s; }
@@ -752,7 +753,13 @@
   <!-- ── STICKY NAV ── -->
   <nav class="site-nav">
     <a class="nav-logo" href="#">
-      <div class="logo-mark">S</div>
+      <div class="logo-mark">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M8,50 C22,36 36,36 50,50 C64,64 78,64 92,50" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <path d="M8,68 C22,54 36,54 50,68 C64,82 78,82 92,68" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.55"/>
+          <path d="M50,28 C70,32 74,55 50,90 C26,55 30,32 50,28 Z" fill="#fff" transform="rotate(180 50 59)"/>
+        </svg>
+      </div>
       <span class="logo-name">sana</span>
     </a>
     <ul class="nav-links">
@@ -1470,7 +1477,13 @@
   <!-- ── FOOTER ── -->
   <footer class="site-footer">
     <div class="footer-logo">
-      <div class="logo-mark">S</div>
+      <div class="logo-mark">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M8,50 C22,36 36,36 50,50 C64,64 78,64 92,50" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <path d="M8,68 C22,54 36,54 50,68 C64,82 78,82 92,68" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.55"/>
+          <path d="M50,28 C70,32 74,55 50,90 C26,55 30,32 50,28 Z" fill="#fff" transform="rotate(180 50 59)"/>
+        </svg>
+      </div>
       <span class="logo-name">sana</span>
     </div>
     <div class="footer-badge">✦ Made in 2026</div>
